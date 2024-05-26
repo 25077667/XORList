@@ -1,5 +1,6 @@
 #include <XORList.hpp>
 #include <gtest/gtest.h>
+#include <list>
 
 namespace scc
 {
@@ -143,9 +144,9 @@ namespace scc
         }
     }
 
-    // Performance Tests
+    // Performance Tests for XORList
 
-    TEST(XORListTest, LargeNumberOfInsertions)
+    TEST(XORListPerformanceTest, LargeNumberOfInsertions)
     {
         XORList<int> list;
         const int num_elements = 1000000;
@@ -159,10 +160,10 @@ namespace scc
         std::chrono::duration<double> elapsed = end - start;
 
         EXPECT_EQ(list.get_size(), num_elements);
-        std::cout << "Time taken for " << num_elements << " insertions: " << elapsed.count() << " seconds\n";
+        std::cout << "XORList - Time taken for " << num_elements << " insertions: " << elapsed.count() << " seconds\n";
     }
 
-    TEST(XORListTest, LargeNumberOfDeletions)
+    TEST(XORListPerformanceTest, LargeNumberOfDeletions)
     {
         XORList<int> list;
         const int num_elements = 1000000;
@@ -181,6 +182,103 @@ namespace scc
         std::chrono::duration<double> elapsed = end - start;
 
         EXPECT_EQ(list.get_size(), 0);
-        std::cout << "Time taken for " << num_elements << " deletions: " << elapsed.count() << " seconds\n";
+        std::cout << "XORList - Time taken for " << num_elements << " deletions: " << elapsed.count() << " seconds\n";
+    }
+
+    TEST(XORListPerformanceTest, InsertErase)
+    {
+        XORList<int> list;
+        const int num_elements = 100000;
+
+        auto start = std::chrono::high_resolution_clock::now();
+        for (int i = 0; i < num_elements; ++i)
+        {
+            list.insert(0, i); // Inserting at the beginning
+        }
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed_insert = end - start;
+
+        EXPECT_EQ(list.get_size(), num_elements);
+        std::cout << "XORList - Time taken for " << num_elements << " insertions at begin: " << elapsed_insert.count() << " seconds\n";
+
+        start = std::chrono::high_resolution_clock::now();
+        for (int i = 0; i < num_elements; ++i)
+        {
+            list.erase(0); // Erasing from the beginning
+        }
+        end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed_erase = end - start;
+
+        EXPECT_EQ(list.get_size(), 0);
+        std::cout << "XORList - Time taken for " << num_elements << " erasures from begin: " << elapsed_erase.count() << " seconds\n";
+    }
+
+    // Performance Tests for std::list
+
+    TEST(StdListPerformanceTest, LargeNumberOfInsertions)
+    {
+        std::list<int> list;
+        const int num_elements = 1000000;
+
+        auto start = std::chrono::high_resolution_clock::now();
+        for (int i = 0; i < num_elements; ++i)
+        {
+            list.push_back(i);
+        }
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+
+        EXPECT_EQ(list.size(), num_elements);
+        std::cout << "std::list - Time taken for " << num_elements << " insertions: " << elapsed.count() << " seconds\n";
+    }
+
+    TEST(StdListPerformanceTest, LargeNumberOfDeletions)
+    {
+        std::list<int> list;
+        const int num_elements = 1000000;
+
+        for (int i = 0; i < num_elements; ++i)
+        {
+            list.push_back(i);
+        }
+
+        auto start = std::chrono::high_resolution_clock::now();
+        for (int i = 0; i < num_elements; ++i)
+        {
+            list.pop_back();
+        }
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+
+        EXPECT_EQ(list.size(), 0);
+        std::cout << "std::list - Time taken for " << num_elements << " deletions: " << elapsed.count() << " seconds\n";
+    }
+
+    TEST(StdListPerformanceTest, InsertErase)
+    {
+        std::list<int> list;
+        const int num_elements = 100000;
+
+        auto start = std::chrono::high_resolution_clock::now();
+        for (int i = 0; i < num_elements; ++i)
+        {
+            list.insert(list.begin(), i); // Inserting at the beginning
+        }
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed_insert = end - start;
+
+        EXPECT_EQ(list.size(), num_elements);
+        std::cout << "std::list - Time taken for " << num_elements << " insertions at begin: " << elapsed_insert.count() << " seconds\n";
+
+        start = std::chrono::high_resolution_clock::now();
+        for (int i = 0; i < num_elements; ++i)
+        {
+            list.erase(list.begin()); // Erasing from the beginning
+        }
+        end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed_erase = end - start;
+
+        EXPECT_EQ(list.size(), 0);
+        std::cout << "std::list - Time taken for " << num_elements << " erasures from begin: " << elapsed_erase.count() << " seconds\n";
     }
 } // namespace scc
