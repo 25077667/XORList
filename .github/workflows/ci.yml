@@ -1,0 +1,43 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Cache CMake and build files
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache
+          build
+        key: ${{ runner.os }}-cmake-${{ hashFiles('**/CMakeLists.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-cmake-
+
+    - name: Install C++ build tools and dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake g++ make build-essential --no-install-recommends
+
+    - name: Configure CMake
+      run: |
+        mkdir -p build
+        cmake -S . -B build
+
+    - name: Build the project
+      run: |
+        cmake --build build
+
+    - name: Run unit tests
+      run: |
+        ctest --test-dir build --output-on-failure
