@@ -144,6 +144,101 @@ namespace scc
         }
     }
 
+    TEST(XORListTest, AssignmentOperator)
+    {
+        XORList<int> list;
+        XORList<int> otherList;
+        otherList.push_back(1);
+        otherList.push_back(2);
+        otherList.push_back(3);
+
+        list = otherList;
+
+        EXPECT_EQ(list.size(), 3);
+        EXPECT_EQ(list.front(), 1);
+        EXPECT_EQ(list.back(), 3);
+
+        // Modify the original list and ensure it does not affect the assigned list
+        otherList.pop_front();
+        EXPECT_EQ(otherList.size(), 2);
+        EXPECT_EQ(list.size(), 3);
+    }
+
+    TEST(XORListTest, Assign)
+    {
+        XORList<int> list;
+        list.assign(5, 42);
+
+        EXPECT_EQ(list.size(), 5);
+        for (auto it = list.begin(); it != list.end(); ++it)
+        {
+            EXPECT_EQ(*it, 42);
+        }
+    }
+
+    TEST(XORListTest, Resize)
+    {
+        XORList<int> list;
+        list.push_back(1);
+        list.push_back(2);
+        list.push_back(3);
+
+        list.resize(5, 42);
+        EXPECT_EQ(list.size(), 5);
+        EXPECT_EQ(list.back(), 42);
+
+        list.resize(2);
+        EXPECT_EQ(list.size(), 2);
+        EXPECT_EQ(list.back(), 2);
+    }
+
+    TEST(XORListTest, Unique)
+    {
+        XORList<int> list;
+        list.push_back(1);
+        list.push_back(2);
+        list.push_back(2);
+        list.push_back(3);
+        list.push_back(3);
+        list.push_back(3);
+
+        list.unique();
+        EXPECT_EQ(list.size(), 3);
+
+        auto it = list.begin();
+        EXPECT_EQ(*it, 1);
+        ++it;
+        EXPECT_EQ(*it, 2);
+        ++it;
+        EXPECT_EQ(*it, 3);
+    }
+
+    TEST(XORListTest, IteratorTraversal)
+    {
+        XORList<int> list;
+        list.push_back(1);
+        list.push_back(2);
+        list.push_back(3);
+
+        auto it = list.begin();
+        EXPECT_EQ(*it, 1);
+        ++it;
+        EXPECT_EQ(*it, 2);
+        ++it;
+        EXPECT_EQ(*it, 3);
+        ++it;
+        EXPECT_EQ(it, list.end());
+
+        auto rit = list.rbegin();
+        EXPECT_EQ(*rit, 3);
+        ++rit;
+        EXPECT_EQ(*rit, 2);
+        ++rit;
+        EXPECT_EQ(*rit, 1);
+        ++rit;
+        EXPECT_EQ(rit, list.rend());
+    }
+
     // Performance Tests for XORList
 
     TEST(XORListPerformanceTest, LargeNumberOfInsertions)
