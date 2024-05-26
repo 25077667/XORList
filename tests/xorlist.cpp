@@ -94,6 +94,144 @@ namespace scc
         EXPECT_EQ(list.back(), 1);
     }
 
+    TEST(XORListIteratorTest, IteratorIncrement)
+    {
+        XORList<int> list;
+        list.push_back(1);
+        list.push_back(2);
+        list.push_back(3);
+
+        auto it = list.begin();
+        EXPECT_EQ(*it, 1);
+
+        ++it;
+        EXPECT_EQ(*it, 2);
+
+        it++;
+        EXPECT_EQ(*it, 3);
+
+        ++it;
+        EXPECT_EQ(it, list.end());
+    }
+
+    TEST(XORListIteratorTest, IteratorDecrement)
+    {
+        XORList<int> list;
+        list.push_back(1);
+        list.push_back(2);
+        list.push_back(3);
+
+        auto it = list.end();
+        --it;
+        EXPECT_EQ(*it, 3);
+
+        it--;
+        EXPECT_EQ(*it, 2);
+
+        --it;
+        EXPECT_EQ(*it, 1);
+
+        EXPECT_EQ(it, list.begin());
+    }
+
+    TEST(XORListIteratorTest, IteratorArithmetic)
+    {
+        XORList<int> list;
+        list.push_back(1);
+        list.push_back(2);
+        list.push_back(3);
+        list.push_back(4);
+        list.push_back(5);
+
+        auto it = list.begin();
+        it = it + 2;
+        EXPECT_EQ(*it, 3);
+
+        it = it - 1;
+        EXPECT_EQ(*it, 2);
+
+        auto it2 = list.begin();
+        EXPECT_EQ(it - it2, 1);
+
+        it2 = it2 + 3;
+        EXPECT_EQ(it2 - list.begin(), 3);
+    }
+
+    TEST(XORListIteratorTest, IteratorComparison)
+    {
+        XORList<int> list;
+        list.push_back(1);
+        list.push_back(2);
+        list.push_back(3);
+
+        auto it1 = list.begin();
+        auto it2 = list.begin();
+        auto it3 = list.begin();
+        ++it3;
+
+        EXPECT_TRUE(it1 == it2);
+        EXPECT_FALSE(it1 == it3);
+        EXPECT_TRUE(it1 != it3);
+
+        ++it1;
+        EXPECT_TRUE(it1 == it3);
+    }
+
+    TEST(XORListIteratorTest, IteratorTraversal)
+    {
+        XORList<int> list;
+        list.push_back(1);
+        list.push_back(2);
+        list.push_back(3);
+
+        auto it = list.begin();
+        EXPECT_EQ(*it, 1);
+        ++it;
+        EXPECT_EQ(*it, 2);
+        ++it;
+        EXPECT_EQ(*it, 3);
+        ++it;
+        EXPECT_EQ(it, list.end());
+
+        auto rit = list.rbegin();
+        EXPECT_EQ(*rit, 3);
+        ++rit;
+        EXPECT_EQ(*rit, 2);
+        ++rit;
+        EXPECT_EQ(*rit, 1);
+        ++rit;
+        EXPECT_EQ(rit, list.rend());
+    }
+
+    TEST(XORListIteratorTest, ReverseIteratorIncrementDecrement)
+    {
+        XORList<int> list;
+        list.push_back(1);
+        list.push_back(2);
+        list.push_back(3);
+
+        auto rit = list.rbegin();
+        EXPECT_EQ(*rit, 3);
+
+        ++rit;
+        EXPECT_EQ(*rit, 2);
+
+        ++rit;
+        EXPECT_EQ(*rit, 1);
+
+        ++rit;
+        EXPECT_EQ(rit, list.rend());
+
+        --rit;
+        EXPECT_EQ(*rit, 1);
+
+        --rit;
+        EXPECT_EQ(*rit, 2);
+
+        --rit;
+        EXPECT_EQ(*rit, 3);
+    }
+
     // Robustness Tests
 
     TEST(XORListTest, HandlesEmptyListPopFront)
@@ -237,6 +375,55 @@ namespace scc
         EXPECT_EQ(*rit, 1);
         ++rit;
         EXPECT_EQ(rit, list.rend());
+    }
+
+    TEST(XORListTest, HandlesNullElements)
+    {
+        XORList<int *> list;
+        int *null_ptr = nullptr;
+        list.push_back(null_ptr);
+
+        EXPECT_EQ(list.size(), 1);
+        EXPECT_EQ(list.front(), nullptr);
+        EXPECT_EQ(list.back(), nullptr);
+
+        list.pop_back();
+        EXPECT_EQ(list.size(), 0);
+    }
+
+    TEST(XORListTest, HandlesMultipleDataTypes)
+    {
+        XORList<std::string> stringList;
+        stringList.push_back("test1");
+        stringList.push_back("test2");
+        stringList.push_back("test3");
+
+        EXPECT_EQ(stringList.size(), 3);
+        EXPECT_EQ(stringList.front(), "test1");
+        EXPECT_EQ(stringList.back(), "test3");
+
+        XORList<double> doubleList;
+        doubleList.push_back(1.1);
+        doubleList.push_back(2.2);
+        doubleList.push_back(3.3);
+
+        EXPECT_EQ(doubleList.size(), 3);
+        EXPECT_EQ(doubleList.front(), 1.1);
+        EXPECT_EQ(doubleList.back(), 3.3);
+    }
+
+    TEST(XORListTest, HandlesSelfAssignment)
+    {
+        XORList<int> list;
+        list.push_back(1);
+        list.push_back(2);
+        list.push_back(3);
+
+        list = list;
+
+        EXPECT_EQ(list.size(), 3);
+        EXPECT_EQ(list.front(), 1);
+        EXPECT_EQ(list.back(), 3);
     }
 
     // Performance Tests for XORList

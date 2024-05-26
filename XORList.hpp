@@ -46,7 +46,6 @@ namespace scc
         {
             clear();
         }
-
         class iterator
         {
         private:
@@ -69,20 +68,14 @@ namespace scc
 
             iterator &operator++()
             {
-                if (current_ == nullptr && prev_ == list_->m_tail_)
-                    return *this; // If already at the end, do nothing
+                if (current_ == nullptr)
+                {
+                    return *this; // Already at end, do nothing
+                }
 
                 Node *next = list_->XOR(prev_, current_->npx);
-                if (current_ == nullptr)
-                { // If we were at the beginning
-                    current_ = list_->m_head_;
-                    prev_ = list_->XOR(nullptr, current_->npx);
-                }
-                else
-                {
-                    prev_ = current_;
-                    current_ = next;
-                }
+                prev_ = current_;
+                current_ = next;
                 return *this;
             }
 
@@ -95,21 +88,14 @@ namespace scc
 
             iterator &operator--()
             {
-                if (prev_ == nullptr && current_ == list_->m_head_)
-                    return *this; // If already at the beginning, do nothing
-
-                Node *next = list_->XOR(prev_, current_->npx);
-                if (current_ == nullptr)
-                { // If we were at the end
-                    current_ = list_->m_tail_;
-                    prev_ = list_->XOR(current_->npx, nullptr);
-                }
-                else
+                if (prev_ == nullptr)
                 {
-                    Node *newPrev = list_->XOR(next->npx, current_);
-                    current_ = prev_;
-                    prev_ = newPrev;
+                    return *this; // Already at begin, do nothing
                 }
+
+                Node *next = list_->XOR(prev_->npx, current_);
+                current_ = prev_;
+                prev_ = next;
                 return *this;
             }
 
@@ -125,6 +111,8 @@ namespace scc
                 iterator temp = *this;
                 for (difference_type i = 0; i < n; ++i)
                 {
+                    if (temp.current_ == nullptr)
+                        break;
                     ++temp;
                 }
                 return temp;
@@ -135,6 +123,8 @@ namespace scc
                 iterator temp = *this;
                 for (difference_type i = 0; i < n; ++i)
                 {
+                    if (temp.prev_ == nullptr && temp.current_ == list_->m_head_)
+                        break;
                     --temp;
                 }
                 return temp;
@@ -142,18 +132,24 @@ namespace scc
 
             difference_type operator-(const iterator &other) const
             {
+                if (list_ != other.list_)
+                    return -1;
+
                 difference_type count = 0;
-                if (*this < other)
+                iterator it = *this;
+                if (it < other)
                 {
-                    for (iterator it = *this; it != other; ++it)
+                    while (it != other)
                     {
+                        ++it;
                         ++count;
                     }
                 }
                 else
                 {
-                    for (iterator it = other; it != *this; ++it)
+                    while (it != other)
                     {
+                        --it;
                         ++count;
                     }
                 }
@@ -166,15 +162,6 @@ namespace scc
                 while (it != other && it != list_->end())
                 {
                     ++it;
-                }
-                if (it == other)
-                {
-                    return true;
-                }
-                it = *this;
-                while (it != other && it != list_->begin())
-                {
-                    --it;
                 }
                 return it == other;
             }
