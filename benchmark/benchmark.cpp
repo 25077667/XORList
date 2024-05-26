@@ -106,12 +106,12 @@ BENCHMARK(BM_StdList_InsertBegin);
 static void BM_XORList_EraseBegin(benchmark::State &state)
 {
     scc::XORList<int> list;
-    for (int i = 0; i < ITERATION_COUNTS; ++i)
-    {
-        list.insert(0, i);
-    }
     for (auto _ : state)
     {
+        for (int i = 0; i < ITERATION_COUNTS; ++i)
+        {
+            list.insert(0, i);
+        }
         for (int i = 0; i < ITERATION_COUNTS; ++i)
         {
             list.erase(0);
