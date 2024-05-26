@@ -232,6 +232,20 @@ namespace scc
         EXPECT_EQ(*rit, 3);
     }
 
+    // test sort
+    TEST(XORListTest, Sort)
+    {
+        XORList<int> list;
+        list.push_back(3);
+        list.push_back(2);
+        list.push_back(1);
+
+        list.sort();
+        EXPECT_EQ(list.size(), 3);
+        EXPECT_EQ(list.front(), 1);
+        EXPECT_EQ(list.back(), 3);
+    }
+
     // Robustness Tests
 
     TEST(XORListTest, HandlesEmptyListPopFront)

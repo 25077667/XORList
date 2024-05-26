@@ -389,6 +389,16 @@ namespace scc
             }
         }
 
+        void sort() noexcept(canThrow == CanThrow::NoThrow)
+        {
+            if (m_size_ < 2)
+            {
+                return;
+            }
+
+            std::sort(begin(), end());
+        }
+
         void clear() noexcept
         {
             Node *current = m_head_;
