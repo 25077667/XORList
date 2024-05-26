@@ -77,7 +77,7 @@ scc::XORList<int> myList;
 - `pop_back()`: Removes and returns the element at the back of the list. (Throws an exception if the list is empty with `scc::CanThrow::Throw`)
 - `insert(position, value)`: Inserts a new element at the specified position (0-based indexing). (Throws an exception for out-of-bounds positions with `scc::CanThrow::Throw`)
 - `erase(position)`: Removes the element at the specified position. (Throws an exception for out-of-bounds positions with `scc::CanThrow::Throw`)
-- `get_size()`: Returns the number of elements in the list.
+- `size()`: Returns the number of elements in the list.
 - `empty()`: Checks if the list is empty.
 - `front()`: Returns a reference to the element at the front of the list. (Throws an exception if the list is empty with `scc::CanThrow::Throw`)
 - `back()`: Returns a reference to the element at the back of the list. (Throws an exception if the list is empty with `scc::CanThrow::Throw`)
@@ -94,7 +94,7 @@ int main() {
   names.push_front("Bob");
   names.insert(1, "Charlie");
 
-  std::cout << "List size: " << names.get_size() << std::endl;  // Output: List size: 3
+  std::cout << "List size: " << names.size() << std::endl;  // Output: List size: 3
 
   std::cout << "Front: " << names.front() << std::endl;        // Output: Front: Bob
   std::cout << "Back: " << names.back() << std::endl;          // Output: Back: Alice

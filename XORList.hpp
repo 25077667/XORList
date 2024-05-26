@@ -26,9 +26,9 @@ namespace scc
             Node(T value) : data(value), npx(nullptr) {}
         };
 
-        Node *head;
-        Node *tail;
-        size_t size;
+        Node *m_head_;
+        Node *m_tail_;
+        size_t m_size_;
 
         Node *XOR(Node *a, Node *b)
         {
@@ -37,7 +37,7 @@ namespace scc
 
     public:
         XORList() noexcept(canThrow == CanThrow::NoThrow)
-            : head(nullptr), tail(nullptr), size(0) {}
+            : m_head_(nullptr), m_tail_(nullptr), m_size_(0) {}
 
         ~XORList()
         {
@@ -46,7 +46,7 @@ namespace scc
 
         void clear() noexcept
         {
-            Node *current = head;
+            Node *current = m_head_;
             Node *prev = nullptr;
             Node *next;
 
@@ -58,8 +58,8 @@ namespace scc
                 current = next;
             }
 
-            head = tail = nullptr;
-            size = 0;
+            m_head_ = m_tail_ = nullptr;
+            m_size_ = 0;
         }
 
         void push_front(const T &value) noexcept(canThrow == CanThrow::NoThrow)
@@ -77,19 +77,19 @@ namespace scc
                 }
             }
 
-            newNode->npx = head;
+            newNode->npx = m_head_;
 
-            if (head != nullptr)
+            if (m_head_ != nullptr)
             {
-                head->npx = XOR(newNode, head->npx);
+                m_head_->npx = XOR(newNode, m_head_->npx);
             }
             else
             {
-                tail = newNode;
+                m_tail_ = newNode;
             }
 
-            head = newNode;
-            ++size;
+            m_head_ = newNode;
+            ++m_size_;
         }
 
         void push_back(const T &value) noexcept(canThrow == CanThrow::NoThrow)
@@ -107,29 +107,29 @@ namespace scc
                 }
             }
 
-            newNode->npx = tail;
+            newNode->npx = m_tail_;
 
-            if (tail != nullptr)
+            if (m_tail_ != nullptr)
             {
-                tail->npx = XOR(newNode, tail->npx);
+                m_tail_->npx = XOR(newNode, m_tail_->npx);
             }
             else
             {
-                head = newNode;
+                m_head_ = newNode;
             }
 
-            tail = newNode;
-            ++size;
+            m_tail_ = newNode;
+            ++m_size_;
         }
 
         bool empty() const noexcept
         {
-            return size == 0;
+            return m_size_ == 0;
         }
 
-        size_t get_size() const noexcept
+        size_t size() const noexcept
         {
-            return size;
+            return m_size_;
         }
 
         T &front() noexcept(canThrow == CanThrow::NoThrow)
@@ -142,10 +142,10 @@ namespace scc
                 }
                 else
                 {
-                    return tail->data; // undefined behavior
+                    return m_tail_->data; // undefined behavior
                 }
             }
-            return head->data;
+            return m_head_->data;
         }
 
         T &back() noexcept(canThrow == CanThrow::NoThrow)
@@ -158,10 +158,10 @@ namespace scc
                 }
                 else
                 {
-                    return tail->data; // undefined behavior
+                    return m_tail_->data; // undefined behavior
                 }
             }
-            return tail->data;
+            return m_tail_->data;
         }
 
         void pop_front() noexcept(canThrow == CanThrow::NoThrow)
@@ -178,8 +178,8 @@ namespace scc
                 }
             }
 
-            Node *temp = head;
-            Node *next = XOR(nullptr, head->npx);
+            Node *temp = m_head_;
+            Node *next = XOR(nullptr, m_head_->npx);
 
             if (next != nullptr)
             {
@@ -187,12 +187,12 @@ namespace scc
             }
             else
             {
-                tail = nullptr;
+                m_tail_ = nullptr;
             }
 
-            head = next;
+            m_head_ = next;
             delete temp;
-            --size;
+            --m_size_;
         }
 
         void pop_back() noexcept(canThrow == CanThrow::NoThrow)
@@ -209,8 +209,8 @@ namespace scc
                 }
             }
 
-            Node *temp = tail;
-            Node *prev = XOR(nullptr, tail->npx);
+            Node *temp = m_tail_;
+            Node *prev = XOR(nullptr, m_tail_->npx);
 
             if (prev != nullptr)
             {
@@ -218,17 +218,17 @@ namespace scc
             }
             else
             {
-                head = nullptr;
+                m_head_ = nullptr;
             }
 
-            tail = prev;
+            m_tail_ = prev;
             delete temp;
-            --size;
+            --m_size_;
         }
 
         void insert(size_t position, const T &value) noexcept(canThrow == CanThrow::NoThrow)
         {
-            if (position > size)
+            if (position > m_size_)
             {
                 if constexpr (canThrow == CanThrow::Throw)
                 {
@@ -245,7 +245,7 @@ namespace scc
                 push_front(value);
                 return;
             }
-            if (position == size)
+            if (position == m_size_)
             {
                 push_back(value);
                 return;
@@ -265,7 +265,7 @@ namespace scc
             }
 
             Node *prev = nullptr;
-            Node *current = head;
+            Node *current = m_head_;
             Node *next;
 
             for (size_t i = 0; i < position; ++i)
@@ -279,12 +279,12 @@ namespace scc
             prev->npx = XOR(XOR(prev->npx, current), newNode);
             current->npx = XOR(newNode, XOR(prev, current->npx));
 
-            ++size;
+            ++m_size_;
         }
 
         void erase(size_t position) noexcept(canThrow == CanThrow::NoThrow)
         {
-            if (position >= size)
+            if (position >= m_size_)
             {
                 if constexpr (canThrow == CanThrow::Throw)
                 {
@@ -301,14 +301,14 @@ namespace scc
                 pop_front();
                 return;
             }
-            if (position == size - 1)
+            if (position == m_size_ - 1)
             {
                 pop_back();
                 return;
             }
 
             Node *prev = nullptr;
-            Node *current = head;
+            Node *current = m_head_;
             Node *next;
 
             for (size_t i = 0; i < position; ++i)
@@ -323,12 +323,12 @@ namespace scc
             next_next->npx = XOR(prev, XOR(current, next_next->npx));
 
             delete current;
-            --size;
+            --m_size_;
         }
 
         void splice(size_t position, XORList<T> &other_list) noexcept(canThrow == CanThrow::NoThrow)
         {
-            if (position > size)
+            if (position > m_size_)
             {
                 if constexpr (canThrow == CanThrow::Throw)
                 {
@@ -347,27 +347,27 @@ namespace scc
 
             if (position == 0)
             {
-                Node *other_tail = other_list.tail;
-                other_tail->npx = XOR(other_tail->npx, head);
+                Node *other_tail = other_list.m_tail_;
+                other_tail->npx = XOR(other_tail->npx, m_head_);
 
-                if (head != nullptr)
+                if (m_head_ != nullptr)
                 {
-                    head->npx = XOR(other_tail, XOR(nullptr, head->npx));
+                    m_head_->npx = XOR(other_tail, XOR(nullptr, m_head_->npx));
                 }
                 else
                 {
-                    tail = other_tail;
+                    m_tail_ = other_tail;
                 }
 
-                head = other_list.head;
-                size += other_list.size;
-                other_list.head = other_list.tail = nullptr;
-                other_list.size = 0;
+                m_head_ = other_list.m_head_;
+                m_size_ += other_list.m_size_;
+                other_list.m_head_ = other_list.m_tail_ = nullptr;
+                other_list.m_size_ = 0;
                 return;
             }
 
             Node *prev = nullptr;
-            Node *current = head;
+            Node *current = m_head_;
             Node *next;
 
             for (size_t i = 0; i < position; ++i)
@@ -377,14 +377,14 @@ namespace scc
                 current = next;
             }
 
-            Node *other_tail = other_list.tail;
+            Node *other_tail = other_list.m_tail_;
             other_tail->npx = XOR(other_tail->npx, current);
-            prev->npx = XOR(XOR(prev->npx, current), other_list.head);
-            other_list.head->npx = XOR(prev, other_list.head->npx);
+            prev->npx = XOR(XOR(prev->npx, current), other_list.m_head_);
+            other_list.m_head_->npx = XOR(prev, other_list.m_head_->npx);
 
-            size += other_list.size;
-            other_list.head = other_list.tail = nullptr;
-            other_list.size = 0;
+            m_size_ += other_list.m_size_;
+            other_list.m_head_ = other_list.m_tail_ = nullptr;
+            other_list.m_size_ = 0;
         }
 
         void merge(XORList<T> &other_list) noexcept
@@ -396,29 +396,29 @@ namespace scc
 
             if (empty())
             {
-                head = other_list.head;
-                tail = other_list.tail;
-                size = other_list.size;
-                other_list.head = other_list.tail = nullptr;
-                other_list.size = 0;
+                m_head_ = other_list.m_head_;
+                m_tail_ = other_list.m_tail_;
+                m_size_ = other_list.m_size_;
+                other_list.m_head_ = other_list.m_tail_ = nullptr;
+                other_list.m_size_ = 0;
                 return;
             }
 
-            tail->npx = XOR(XOR(tail->npx, nullptr), other_list.head);
-            other_list.head->npx = XOR(tail, other_list.head->npx);
+            m_tail_->npx = XOR(XOR(m_tail_->npx, nullptr), other_list.m_head_);
+            other_list.m_head_->npx = XOR(m_tail_, other_list.m_head_->npx);
 
-            tail = other_list.tail;
-            size += other_list.size;
+            m_tail_ = other_list.m_tail_;
+            m_size_ += other_list.m_size_;
 
-            other_list.head = other_list.tail = nullptr;
-            other_list.size = 0;
+            other_list.m_head_ = other_list.m_tail_ = nullptr;
+            other_list.m_size_ = 0;
         }
 
         void reverse() noexcept
         {
-            Node *temp = head;
-            head = tail;
-            tail = temp;
+            Node *temp = m_head_;
+            m_head_ = m_tail_;
+            m_tail_ = temp;
         }
     };
 }

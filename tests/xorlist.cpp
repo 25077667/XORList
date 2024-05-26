@@ -12,7 +12,7 @@ namespace scc
         list.push_front(2);
         list.push_front(3);
 
-        EXPECT_EQ(list.get_size(), 3);
+        EXPECT_EQ(list.size(), 3);
         EXPECT_EQ(list.front(), 3);
         EXPECT_EQ(list.back(), 1);
     }
@@ -24,7 +24,7 @@ namespace scc
         list.push_back(2);
         list.push_back(3);
 
-        EXPECT_EQ(list.get_size(), 3);
+        EXPECT_EQ(list.size(), 3);
         EXPECT_EQ(list.front(), 1);
         EXPECT_EQ(list.back(), 3);
     }
@@ -37,7 +37,7 @@ namespace scc
         list.push_front(3);
         list.pop_front();
 
-        EXPECT_EQ(list.get_size(), 2);
+        EXPECT_EQ(list.size(), 2);
         EXPECT_EQ(list.front(), 2);
     }
 
@@ -49,7 +49,7 @@ namespace scc
         list.push_back(3);
         list.pop_back();
 
-        EXPECT_EQ(list.get_size(), 2);
+        EXPECT_EQ(list.size(), 2);
         EXPECT_EQ(list.back(), 2);
     }
 
@@ -60,7 +60,7 @@ namespace scc
         list.push_back(3);
         list.insert(1, 2);
 
-        EXPECT_EQ(list.get_size(), 3);
+        EXPECT_EQ(list.size(), 3);
         EXPECT_EQ(list.front(), 1);
         EXPECT_EQ(list.back(), 3);
 
@@ -76,7 +76,7 @@ namespace scc
         list.push_back(3);
         list.erase(1);
 
-        EXPECT_EQ(list.get_size(), 2);
+        EXPECT_EQ(list.size(), 2);
         EXPECT_EQ(list.front(), 1);
         EXPECT_EQ(list.back(), 3);
     }
@@ -89,7 +89,7 @@ namespace scc
         list.push_back(3);
         list.reverse();
 
-        EXPECT_EQ(list.get_size(), 3);
+        EXPECT_EQ(list.size(), 3);
         EXPECT_EQ(list.front(), 3);
         EXPECT_EQ(list.back(), 1);
     }
@@ -159,7 +159,7 @@ namespace scc
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed = end - start;
 
-        EXPECT_EQ(list.get_size(), num_elements);
+        EXPECT_EQ(list.size(), num_elements);
         std::cout << "XORList - Time taken for " << num_elements << " insertions: " << elapsed.count() << " seconds\n";
     }
 
@@ -181,7 +181,7 @@ namespace scc
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed = end - start;
 
-        EXPECT_EQ(list.get_size(), 0);
+        EXPECT_EQ(list.size(), 0);
         std::cout << "XORList - Time taken for " << num_elements << " deletions: " << elapsed.count() << " seconds\n";
     }
 
@@ -198,7 +198,7 @@ namespace scc
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed_insert = end - start;
 
-        EXPECT_EQ(list.get_size(), num_elements);
+        EXPECT_EQ(list.size(), num_elements);
         std::cout << "XORList - Time taken for " << num_elements << " insertions at begin: " << elapsed_insert.count() << " seconds\n";
 
         start = std::chrono::high_resolution_clock::now();
@@ -209,7 +209,7 @@ namespace scc
         end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed_erase = end - start;
 
-        EXPECT_EQ(list.get_size(), 0);
+        EXPECT_EQ(list.size(), 0);
         std::cout << "XORList - Time taken for " << num_elements << " erasures from begin: " << elapsed_erase.count() << " seconds\n";
     }
 
