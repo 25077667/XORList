@@ -73,8 +73,8 @@ scc::XORList<int> myList;
 
 - `push_front(value)`: Inserts a new element at the front of the list.
 - `push_back(value)`: Inserts a new element at the back of the list.
-- `pop_front()`: Removes and returns the element at the front of the list. (Throws an exception if the list is empty with `scc::CanThrow::Throw`)
-- `pop_back()`: Removes and returns the element at the back of the list. (Throws an exception if the list is empty with `scc::CanThrow::Throw`)
+- `pop_front()`: Removes the element at the front of the list. (Throws an exception if the list is empty with `scc::CanThrow::Throw`)
+- `pop_back()`: Removes the element at the back of the list. (Throws an exception if the list is empty with `scc::CanThrow::Throw`)
 - `insert(position, value)`: Inserts a new element at the specified position (0-based indexing). (Throws an exception for out-of-bounds positions with `scc::CanThrow::Throw`)
 - `erase(position)`: Removes the element at the specified position. (Throws an exception for out-of-bounds positions with `scc::CanThrow::Throw`)
 - `size()`: Returns the number of elements in the list.
@@ -82,6 +82,25 @@ scc::XORList<int> myList;
 - `front()`: Returns a reference to the element at the front of the list. (Throws an exception if the list is empty with `scc::CanThrow::Throw`)
 - `back()`: Returns a reference to the element at the back of the list. (Throws an exception if the list is empty with `scc::CanThrow::Throw`)
 - `reverse()`: Reverses the order of elements in the list.
+- `clear()`: Removes all elements from the list.
+- `begin()`: Returns an iterator to the beginning of the list.
+- `cbegin() const`: Returns a const iterator to the beginning of the list.
+- `end()`: Returns an iterator to the end of the list.
+- `cend() const`: Returns a const iterator to the end of the list.
+- `rbegin()`: Returns a reverse iterator to the beginning of the reversed list.
+- `crbegin() const`: Returns a const reverse iterator to the beginning of the reversed list.
+- `rend()`: Returns a reverse iterator to the end of the reversed list.
+- `crend() const`: Returns a const reverse iterator to the end of the reversed list.
+- `max_size() const`: Returns the maximum possible number of elements in the list.
+- `emplace(position, args...)`: Constructs elements in place at the specified position. (Throws an exception for out-of-bounds positions with `scc::CanThrow::Throw`)
+- `emplace_back(args...)`: Constructs elements in place at the end of the list.
+- `resize(count, value)`: Resizes the list to contain `count` elements, initializing new elements with `value`.
+- `unique()`: Removes consecutive duplicate elements from the list.
+- `sort()`: Sorts the elements in the list.
+- `splice(position, other_list)`: Transfers elements from `other_list` into this list at the specified position.
+- `merge(other_list)`: Merges elements from `other_list` into this list, maintaining sorted order.
+- `get_allocator() const`: Returns a copy of the allocator object used by the list.
+- `assign(count, value)`: Assigns new contents to the list, replacing its current contents.
 
 ### Example Usage
 
