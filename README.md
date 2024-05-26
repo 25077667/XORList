@@ -1,7 +1,7 @@
 # XORList: Efficient C++ Linked List (No-throw by default)
 
 This repository implements an XOR Linked List (XORList) in C++, offering:
-
+- **Single Header File:** Easy to include in your C++ projects.
 - **Space Efficiency:** Utilizes the XOR operation to store pointers, reducing memory usage compared to traditional linked lists.
 - **Constant-time Operations:** Enables insertions/deletions at any position in constant time.
 - **Optional Throwing Behavior:** Choose between a no-throw (`CanThrow::NoThrow`) and throwing (`CanThrow::Throw`) version using the template parameter.
@@ -64,21 +64,21 @@ ctest
 2. Create an instance of `XORList` with the desired data type:
 
 ```c++
-XORList<int> myList;
+scc::XORList<int> myList;
 ```
 
 3. Use member functions to manipulate the list:
 
 - `push_front(value)`: Inserts a new element at the front of the list.
 - `push_back(value)`: Inserts a new element at the back of the list.
-- `pop_front()`: Removes and returns the element at the front of the list. (Throws an exception if the list is empty with `CanThrow::Throw`)
-- `pop_back()`: Removes and returns the element at the back of the list. (Throws an exception if the list is empty with `CanThrow::Throw`)
-- `insert(position, value)`: Inserts a new element at the specified position (0-based indexing). (Throws an exception for out-of-bounds positions with `CanThrow::Throw`)
-- `erase(position)`: Removes the element at the specified position. (Throws an exception for out-of-bounds positions with `CanThrow::Throw`)
+- `pop_front()`: Removes and returns the element at the front of the list. (Throws an exception if the list is empty with `scc::CanThrow::Throw`)
+- `pop_back()`: Removes and returns the element at the back of the list. (Throws an exception if the list is empty with `scc::CanThrow::Throw`)
+- `insert(position, value)`: Inserts a new element at the specified position (0-based indexing). (Throws an exception for out-of-bounds positions with `scc::CanThrow::Throw`)
+- `erase(position)`: Removes the element at the specified position. (Throws an exception for out-of-bounds positions with `scc::CanThrow::Throw`)
 - `get_size()`: Returns the number of elements in the list.
 - `empty()`: Checks if the list is empty.
-- `front()`: Returns a reference to the element at the front of the list. (Throws an exception if the list is empty with `CanThrow::Throw`)
-- `back()`: Returns a reference to the element at the back of the list. (Throws an exception if the list is empty with `CanThrow::Throw`)
+- `front()`: Returns a reference to the element at the front of the list. (Throws an exception if the list is empty with `scc::CanThrow::Throw`)
+- `back()`: Returns a reference to the element at the back of the list. (Throws an exception if the list is empty with `scc::CanThrow::Throw`)
 - `reverse()`: Reverses the order of elements in the list.
 
 ### Example Usage
@@ -87,7 +87,7 @@ XORList<int> myList;
 #include <XORList.hpp>
 
 int main() {
-  XORList<std::string> names;
+  scc::XORList<std::string> names;
   names.push_back("Alice");
   names.push_front("Bob");
   names.insert(1, "Charlie");
