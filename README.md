@@ -23,6 +23,8 @@ This repository implements an XOR Linked List (XORList) in C++, offering:
 ![](/benchmark/assets/benchmark_iterators.png)
 ![](/benchmark/assets/benchmark_algorithm.png)
 ![](/benchmark/assets/benchmark_uniq_sort.png)
+![](/benchmark/assets/benchmark_reserve.png)
+![](/benchmark/assets/benchmark_resize.png)
 
 ### Prerequisites
 
