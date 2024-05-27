@@ -135,4 +135,60 @@ static void BM_StdList_EraseBegin(benchmark::State &state)
 }
 BENCHMARK(BM_StdList_EraseBegin);
 
+// Benchmark for XORList emplace
+static void BM_XORList_Emplace(benchmark::State &state)
+{
+    for (auto _ : state)
+    {
+        scc::XORList<int> list;
+        for (int i = 0; i < ITERATION_COUNTS; ++i)
+        {
+            list.emplace(0, i);
+        }
+    }
+}
+BENCHMARK(BM_XORList_Emplace);
+
+// Benchmark for std::list emplace
+static void BM_StdList_Emplace(benchmark::State &state)
+{
+    for (auto _ : state)
+    {
+        std::list<int> list;
+        for (int i = 0; i < ITERATION_COUNTS; ++i)
+        {
+            list.emplace(list.begin(), i);
+        }
+    }
+}
+BENCHMARK(BM_StdList_Emplace);
+
+// Benchmark for XORList emplace_back
+static void BM_XORList_EmplaceBack(benchmark::State &state)
+{
+    for (auto _ : state)
+    {
+        scc::XORList<int> list;
+        for (int i = 0; i < ITERATION_COUNTS; ++i)
+        {
+            list.emplace_back(i);
+        }
+    }
+}
+BENCHMARK(BM_XORList_EmplaceBack);
+
+// Benchmark for std::list emplace_back
+static void BM_StdList_EmplaceBack(benchmark::State &state)
+{
+    for (auto _ : state)
+    {
+        std::list<int> list;
+        for (int i = 0; i < ITERATION_COUNTS; ++i)
+        {
+            list.emplace_back(i);
+        }
+    }
+}
+BENCHMARK(BM_StdList_EmplaceBack);
+
 BENCHMARK_MAIN();
