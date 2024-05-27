@@ -257,6 +257,42 @@ namespace scc
         EXPECT_TRUE(list.empty());
     }
 
+    // cbegin, cend tests
+    TEST(XORListTest, ConstIteratorTraversal)
+    {
+        XORList<int> list;
+        list.push_back(1);
+        list.push_back(2);
+        list.push_back(3);
+
+        auto it = list.cbegin();
+        EXPECT_EQ(*it, 1);
+        ++it;
+        EXPECT_EQ(*it, 2);
+        ++it;
+        EXPECT_EQ(*it, 3);
+        ++it;
+        EXPECT_EQ(it, list.cend());
+    }
+
+    // crbegin, crend tests
+    TEST(XORListTest, ConstReverseIteratorTraversal)
+    {
+        XORList<int> list;
+        list.push_back(1);
+        list.push_back(2);
+        list.push_back(3);
+
+        auto it = list.crbegin();
+        EXPECT_EQ(*it, 3);
+        ++it;
+        EXPECT_EQ(*it, 2);
+        ++it;
+        EXPECT_EQ(*it, 1);
+        ++it;
+        EXPECT_EQ(it, list.crend());
+    }
+
     TEST(XORListTest, MaxSize)
     {
         XORList<int> list;

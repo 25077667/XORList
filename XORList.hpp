@@ -38,6 +38,11 @@ namespace scc
             return reinterpret_cast<Node *>(reinterpret_cast<uintptr_t>(a) ^ reinterpret_cast<uintptr_t>(b));
         }
 
+        const Node *XOR(const Node *a, const Node *b) const
+        {
+            return reinterpret_cast<const Node *>(reinterpret_cast<uintptr_t>(a) ^ reinterpret_cast<uintptr_t>(b));
+        }
+
     public:
         XORList() noexcept(canThrow == CanThrow::NoThrow)
             : m_head_(nullptr), m_tail_(nullptr), m_size_(0) {}
@@ -105,7 +110,7 @@ namespace scc
         private:
             Node *prev_;
             Node *current_;
-            XORList *list_;
+            mutable XORList *list_;
 
         public:
             using iterator_category = std::bidirectional_iterator_tag;
@@ -224,6 +229,132 @@ namespace scc
             bool operator!=(const iterator &other) const { return current_ != other.current_; }
         };
 
+        class const_iterator
+        {
+        private:
+            mutable const Node *prev_;
+            mutable const Node *current_;
+            mutable const XORList *list_;
+
+        public:
+            using iterator_category = std::bidirectional_iterator_tag;
+            using value_type = T;
+            using difference_type = std::ptrdiff_t;
+            using pointer = const T *;
+            using reference = const T &;
+
+            const_iterator(const Node *prev, const Node *current, const XORList *list)
+                : prev_(prev), current_(current), list_(list) {}
+
+            reference operator*() const { return current_->data; }
+            pointer operator->() const { return &(current_->data); }
+
+            const_iterator &operator++()
+            {
+                if (current_ == nullptr)
+                {
+                    return *this; // Already at end, do nothing
+                }
+
+                const Node *next = list_->XOR(prev_, current_->npx);
+                prev_ = current_;
+                current_ = next;
+                return *this;
+            }
+
+            const_iterator operator++(int)
+            {
+                const_iterator temp = *this;
+                ++(*this);
+                return temp;
+            }
+
+            const_iterator &operator--()
+            {
+                if (prev_ == nullptr)
+                {
+                    return *this; // Already at begin, do nothing
+                }
+
+                Node *next = list_->XOR(prev_->npx, current_);
+                current_ = prev_;
+                prev_ = next;
+                return *this;
+            }
+
+            const_iterator operator--(int)
+            {
+                const_iterator temp = *this;
+                --(*this);
+                return temp;
+            }
+
+            const_iterator operator+(difference_type n) const
+            {
+                const_iterator temp = *this;
+                for (difference_type i = 0; i < n; ++i)
+                {
+                    if (temp.current_ == nullptr)
+                        break;
+                    ++temp;
+                }
+                return temp;
+            }
+
+            const_iterator operator-(difference_type n) const
+            {
+                const_iterator temp = *this;
+                for (difference_type i = 0; i < n; ++i)
+                {
+                    if (temp.prev_ == nullptr && temp.current_ == list_->m_head_)
+                        break;
+                    --temp;
+                }
+                return temp;
+            }
+
+            difference_type operator-(const const_iterator &other) const
+            {
+                if (list_ != other.list_)
+                    return -1;
+
+                difference_type count = 0;
+                const_iterator it = *this;
+                if (it < other)
+                {
+                    while (it != other)
+
+                    {
+                        ++it;
+                        ++count;
+                    }
+                }
+                else
+                {
+                    while (it != other)
+                    {
+                        --it;
+                        ++count;
+                    }
+                }
+
+                return count;
+            }
+
+            bool operator<(const const_iterator &other) const
+            {
+                const_iterator it = *this;
+                while (it != other && it != list_->cend())
+                {
+                    ++it;
+                }
+                return it == other;
+            }
+
+            bool operator==(const const_iterator &other) const { return current_ == other.current_; }
+            bool operator!=(const const_iterator &other) const { return current_ != other.current_; }
+        };
+
         XORList &operator=(const XORList &other) noexcept(canThrow == CanThrow::NoThrow)
         {
             if (this != &other)
@@ -257,9 +388,9 @@ namespace scc
             return iterator(nullptr, m_head_, this);
         }
 
-        iterator cbegin() const noexcept
+        const_iterator cbegin() const noexcept
         {
-            return iterator(nullptr, m_head_, this);
+            return const_iterator(nullptr, m_head_, this);
         }
 
         iterator end() noexcept
@@ -267,9 +398,9 @@ namespace scc
             return iterator(m_tail_, nullptr, this);
         }
 
-        iterator cend() const noexcept
+        const_iterator cend() const noexcept
         {
-            return iterator(m_tail_, nullptr, this);
+            return const_iterator(m_tail_, nullptr, this);
         }
 
         iterator rbegin() noexcept
@@ -277,9 +408,9 @@ namespace scc
             return iterator(nullptr, m_tail_, this);
         }
 
-        iterator crbegin() const noexcept
+        const_iterator crbegin() const noexcept
         {
-            return iterator(nullptr, m_tail_, this);
+            return const_iterator(nullptr, m_tail_, this);
         }
 
         iterator rend() noexcept
@@ -287,9 +418,9 @@ namespace scc
             return iterator(m_head_, nullptr, this);
         }
 
-        iterator crend() const noexcept
+        const_iterator crend() const noexcept
         {
-            return iterator(m_head_, nullptr, this);
+            return const_iterator(m_head_, nullptr, this);
         }
 
         size_t max_size() const noexcept
