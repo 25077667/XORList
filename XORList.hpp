@@ -6,6 +6,7 @@
 #include <memory>
 #include <stdexcept>
 #include <iterator>
+#include <type_traits>
 #include <limits>
 #include <algorithm>
 
@@ -145,69 +146,73 @@ namespace scc
         {
             clear();
         }
-        class iterator
+        template <bool IsConst>
+        class XORListIterator
         {
         private:
-            Node *prev_;
-            Node *current_;
-            mutable XORList *list_;
+            using NodeType = std::conditional_t<IsConst, const Node, Node>;
+            using XORListType = std::conditional_t<IsConst, const XORList, XORList>;
+
+            NodeType *prev_;
+            NodeType *current_;
+            XORListType *list_;
 
         public:
             using iterator_category = std::bidirectional_iterator_tag;
             using value_type = T;
             using difference_type = std::ptrdiff_t;
-            using pointer = T *;
-            using reference = T &;
+            using pointer = std::conditional_t<IsConst, const T *, T *>;
+            using reference = std::conditional_t<IsConst, const T &, T &>;
 
-            iterator(Node *prev, Node *current, XORList *list)
+            XORListIterator(NodeType *prev, NodeType *current, XORListType *list)
                 : prev_(prev), current_(current), list_(list) {}
 
             reference operator*() const { return current_->data; }
             pointer operator->() const { return &(current_->data); }
 
-            iterator &operator++()
+            XORListIterator &operator++()
             {
                 if (current_ == nullptr)
                 {
                     return *this; // Already at end, do nothing
                 }
 
-                Node *next = list_->XOR(prev_, current_->npx);
+                NodeType *next = list_->XOR(prev_, current_->npx);
                 prev_ = current_;
                 current_ = next;
                 return *this;
             }
 
-            iterator operator++(int)
+            XORListIterator operator++(int)
             {
-                iterator temp = *this;
+                XORListIterator temp = *this;
                 ++(*this);
                 return temp;
             }
 
-            iterator &operator--()
+            XORListIterator &operator--()
             {
                 if (prev_ == nullptr)
                 {
                     return *this; // Already at begin, do nothing
                 }
 
-                Node *next = list_->XOR(prev_->npx, current_);
+                NodeType *next = list_->XOR(prev_->npx, current_);
                 current_ = prev_;
                 prev_ = next;
                 return *this;
             }
 
-            iterator operator--(int)
+            XORListIterator operator--(int)
             {
-                iterator temp = *this;
+                XORListIterator temp = *this;
                 --(*this);
                 return temp;
             }
 
-            iterator operator+(difference_type n) const
+            XORListIterator operator+(difference_type n) const
             {
-                iterator temp = *this;
+                XORListIterator temp = *this;
                 for (difference_type i = 0; i < n; ++i)
                 {
                     if (temp.current_ == nullptr)
@@ -217,9 +222,9 @@ namespace scc
                 return temp;
             }
 
-            iterator operator-(difference_type n) const
+            XORListIterator operator-(difference_type n) const
             {
-                iterator temp = *this;
+                XORListIterator temp = *this;
                 for (difference_type i = 0; i < n; ++i)
                 {
                     if (temp.prev_ == nullptr && temp.current_ == list_->m_head_)
@@ -229,13 +234,13 @@ namespace scc
                 return temp;
             }
 
-            difference_type operator-(const iterator &other) const
+            difference_type operator-(const XORListIterator &other) const
             {
                 if (list_ != other.list_)
                     return -1;
 
                 difference_type count = 0;
-                iterator it = *this;
+                XORListIterator it = *this;
                 if (it < other)
                 {
                     while (it != other)
@@ -255,9 +260,9 @@ namespace scc
                 return count;
             }
 
-            bool operator<(const iterator &other) const
+            bool operator<(const XORListIterator &other) const
             {
-                iterator it = *this;
+                XORListIterator it = *this;
                 while (it != other && it != list_->end())
                 {
                     ++it;
@@ -265,135 +270,13 @@ namespace scc
                 return it == other;
             }
 
-            bool operator==(const iterator &other) const { return current_ == other.current_; }
-            bool operator!=(const iterator &other) const { return current_ != other.current_; }
+            bool operator==(const XORListIterator &other) const { return current_ == other.current_; }
+            bool operator!=(const XORListIterator &other) const { return current_ != other.current_; }
         };
 
-        class const_iterator
-        {
-        private:
-            mutable const Node *prev_;
-            mutable const Node *current_;
-            mutable const XORList *list_;
-
-        public:
-            using iterator_category = std::bidirectional_iterator_tag;
-            using value_type = T;
-            using difference_type = std::ptrdiff_t;
-            using pointer = const T *;
-            using reference = const T &;
-
-            const_iterator(const Node *prev, const Node *current, const XORList *list)
-                : prev_(prev), current_(current), list_(list) {}
-
-            reference operator*() const { return current_->data; }
-            pointer operator->() const { return &(current_->data); }
-
-            const_iterator &operator++()
-            {
-                if (current_ == nullptr)
-                {
-                    return *this; // Already at end, do nothing
-                }
-
-                const Node *next = list_->XOR(prev_, current_->npx);
-                prev_ = current_;
-                current_ = next;
-                return *this;
-            }
-
-            const_iterator operator++(int)
-            {
-                const_iterator temp = *this;
-                ++(*this);
-                return temp;
-            }
-
-            const_iterator &operator--()
-            {
-                if (prev_ == nullptr)
-                {
-                    return *this; // Already at begin, do nothing
-                }
-
-                Node *next = list_->XOR(prev_->npx, current_);
-                current_ = prev_;
-                prev_ = next;
-                return *this;
-            }
-
-            const_iterator operator--(int)
-            {
-                const_iterator temp = *this;
-                --(*this);
-                return temp;
-            }
-
-            const_iterator operator+(difference_type n) const
-            {
-                const_iterator temp = *this;
-                for (difference_type i = 0; i < n; ++i)
-                {
-                    if (temp.current_ == nullptr)
-                        break;
-                    ++temp;
-                }
-                return temp;
-            }
-
-            const_iterator operator-(difference_type n) const
-            {
-                const_iterator temp = *this;
-                for (difference_type i = 0; i < n; ++i)
-                {
-                    if (temp.prev_ == nullptr && temp.current_ == list_->m_head_)
-                        break;
-                    --temp;
-                }
-                return temp;
-            }
-
-            difference_type operator-(const const_iterator &other) const
-            {
-                if (list_ != other.list_)
-                    return -1;
-
-                difference_type count = 0;
-                const_iterator it = *this;
-                if (it < other)
-                {
-                    while (it != other)
-
-                    {
-                        ++it;
-                        ++count;
-                    }
-                }
-                else
-                {
-                    while (it != other)
-                    {
-                        --it;
-                        ++count;
-                    }
-                }
-
-                return count;
-            }
-
-            bool operator<(const const_iterator &other) const
-            {
-                const_iterator it = *this;
-                while (it != other && it != list_->cend())
-                {
-                    ++it;
-                }
-                return it == other;
-            }
-
-            bool operator==(const const_iterator &other) const { return current_ == other.current_; }
-            bool operator!=(const const_iterator &other) const { return current_ != other.current_; }
-        };
+        // Aliases for iterator and const_iterator
+        using iterator = XORListIterator<false>;
+        using const_iterator = XORListIterator<true>;
 
         XORList &operator=(const XORList &other) noexcept(canThrow == CanThrow::NoThrow)
         {
