@@ -81,7 +81,7 @@ namespace scc
             }
         }
 
-        template <class InputIt>
+        template <class InputIt, typename = std::_RequireInputIter<InputIt>>
         XORList(InputIt first, InputIt last, const Allocator &allocator = Allocator()) noexcept(canThrow == CanThrow::NoThrow)
             : m_head_(nullptr), m_tail_(nullptr), m_size_(0), alloc_(allocator)
         {

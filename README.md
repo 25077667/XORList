@@ -20,6 +20,7 @@ This repository implements an XOR Linked List (XORList) in C++, offering:
 ## Getting Started
 **🚀🚀Faster than std::list🚀🚀**
 ![](/benchmark/assets/benchmark_comparison.png)
+![](/benchmark/assets/benchmark_iterators.png)
 
 ### Prerequisites
 

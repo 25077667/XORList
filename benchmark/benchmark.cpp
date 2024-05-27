@@ -2,9 +2,6 @@
 #include <XORList.hpp>
 #include <list>
 
-#include <iostream>
-#include <fstream>
-
 static constexpr auto ITERATION_COUNTS = 100000;
 
 // Benchmark for XORList push_back
