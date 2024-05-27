@@ -101,6 +101,46 @@ namespace scc
             }
         }
 
+        bool operator==(const XORList &other) const noexcept
+        {
+            if (m_size_ != other.m_size_)
+            {
+                return false;
+            }
+
+            const Node *current = m_head_;
+            const Node *prev = nullptr;
+            const Node *next;
+
+            const Node *other_current = other.m_head_;
+            const Node *other_prev = nullptr;
+            const Node *other_next;
+
+            while (current != nullptr && other_current != nullptr)
+            {
+                if (current->data != other_current->data)
+                {
+                    return false;
+                }
+
+                next = XOR(prev, current->npx);
+                other_next = XOR(other_prev, other_current->npx);
+
+                prev = current;
+                current = next;
+
+                other_prev = other_current;
+                other_current = other_next;
+            }
+
+            return current == nullptr && other_current == nullptr;
+        }
+
+        bool operator!=(const XORList &other) const noexcept
+        {
+            return !(*this == other);
+        }
+
         ~XORList()
         {
             clear();

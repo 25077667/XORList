@@ -257,7 +257,6 @@ namespace scc
         EXPECT_TRUE(list.empty());
     }
 
-    // cbegin, cend tests
     TEST(XORListTest, ConstIteratorTraversal)
     {
         XORList<int> list;
@@ -275,7 +274,6 @@ namespace scc
         EXPECT_EQ(it, list.cend());
     }
 
-    // crbegin, crend tests
     TEST(XORListTest, ConstReverseIteratorTraversal)
     {
         XORList<int> list;
@@ -721,4 +719,246 @@ namespace scc
         EXPECT_EQ(list.size(), 0);
         std::cout << "std::list - Time taken for " << num_elements << " erasures from begin: " << elapsed_erase.count() << " seconds\n";
     }
+
+    // Iterator Invalidations
+
+    TEST(XORListTest, IteratorInvalidationOnInsert)
+    {
+        XORList<int> list;
+        list.push_back(1);
+        list.push_back(2);
+        auto it = list.begin();
+        list.insert(1, 3); // Inserting in the middle
+        // No exception should be thrown by default, but we can still check iterator behavior
+        EXPECT_NE(it, list.end()); // Iterator should not point to end, but its behavior is undefined
+    }
+
+    TEST(XORListTest, IteratorInvalidationOnErase)
+    {
+        XORList<int> list;
+        list.push_back(1);
+        list.push_back(2);
+        auto it = list.begin();
+        list.erase(0); // Erasing the first element
+        // No exception should be thrown by default, but we can still check iterator behavior
+        EXPECT_NE(it, list.end()); // Iterator should not point to end, but its behavior is undefined
+    }
+
+    // Edge Cases
+
+    TEST(XORListTest, InsertAtBeginOnEmptyList)
+    {
+        XORList<int> list;
+        list.insert(0, 1);
+
+        EXPECT_EQ(list.size(), 1);
+        EXPECT_EQ(list.front(), 1);
+    }
+
+    TEST(XORListTest, InsertAtEndOnEmptyList)
+    {
+        XORList<int> list;
+        list.insert(0, 1);
+
+        EXPECT_EQ(list.size(), 1);
+        EXPECT_EQ(list.front(), 1);
+    }
+
+    TEST(XORListTest, InsertAtBeginOnNonEmptyList)
+    {
+        XORList<int> list;
+        list.push_back(2);
+        list.push_back(3);
+        list.insert(0, 1);
+
+        EXPECT_EQ(list.size(), 3);
+        EXPECT_EQ(list.front(), 1);
+        EXPECT_EQ(list.back(), 3);
+    }
+
+    TEST(XORListTest, InsertAtEndOnNonEmptyList)
+    {
+        XORList<int> list;
+        list.push_back(1);
+        list.push_back(2);
+        list.insert(2, 3);
+
+        EXPECT_EQ(list.size(), 3);
+        EXPECT_EQ(list.front(), 1);
+        EXPECT_EQ(list.back(), 3);
+    }
+
+    TEST(XORListTest, EraseFromBegin)
+    {
+        XORList<int> list;
+        list.push_back(1);
+        list.push_back(2);
+        list.erase(0);
+
+        EXPECT_EQ(list.size(), 1);
+        EXPECT_EQ(list.front(), 2);
+    }
+
+    TEST(XORListTest, EraseFromEnd)
+    {
+        XORList<int> list;
+        list.push_back(1);
+        list.push_back(2);
+        list.erase(1);
+
+        EXPECT_EQ(list.size(), 1);
+        EXPECT_EQ(list.back(), 1);
+    }
+
+    // Move Semantics
+
+    TEST(XORListTest, MoveConstructor)
+    {
+        XORList<int> list;
+        list.push_back(1);
+        list.push_back(2);
+        list.push_back(3);
+
+        XORList<int> moved_list(std::move(list));
+
+        EXPECT_EQ(moved_list.size(), 3);
+        EXPECT_EQ(moved_list.front(), 1);
+        EXPECT_EQ(moved_list.back(), 3);
+    }
+
+    TEST(XORListTest, MoveAssignmentOperator)
+    {
+        XORList<int> list;
+        list.push_back(1);
+        list.push_back(2);
+        list.push_back(3);
+
+        XORList<int> moved_list;
+        moved_list = std::move(list);
+
+        EXPECT_EQ(moved_list.size(), 3);
+        EXPECT_EQ(moved_list.front(), 1);
+        EXPECT_EQ(moved_list.back(), 3);
+    }
+
+    // Equality and Inequality
+
+    TEST(XORListTest, EqualityOperator)
+    {
+        XORList<int> list1;
+        list1.push_back(1);
+        list1.push_back(2);
+
+        XORList<int> list2;
+        list2.push_back(1);
+        list2.push_back(2);
+
+        EXPECT_TRUE(list1 == list2);
+    }
+
+    TEST(XORListTest, InequalityOperator)
+    {
+        XORList<int> list1;
+        list1.push_back(1);
+        list1.push_back(2);
+
+        XORList<int> list2;
+        list2.push_back(1);
+        list2.push_back(3);
+
+        EXPECT_TRUE(list1 != list2);
+    }
+
+    // Copy Semantics
+
+    TEST(XORListTest, CopyConstructor)
+    {
+        XORList<int> list;
+        list.push_back(1);
+        list.push_back(2);
+        list.push_back(3);
+
+        XORList<int> copied_list(list);
+
+        EXPECT_EQ(copied_list.size(), 3);
+        EXPECT_EQ(copied_list.front(), 1);
+        EXPECT_EQ(copied_list.back(), 3);
+    }
+
+    TEST(XORListTest, CopyAssignmentOperator)
+    {
+        XORList<int> list;
+        list.push_back(1);
+        list.push_back(2);
+        list.push_back(3);
+
+        XORList<int> copied_list;
+        copied_list = list;
+
+        EXPECT_EQ(copied_list.size(), 3);
+        EXPECT_EQ(copied_list.front(), 1);
+        EXPECT_EQ(copied_list.back(), 3);
+    }
+
+    // Splice Variants
+
+    TEST(XORListTest, SpliceSingleElement)
+    {
+        XORList<int> list1;
+        list1.push_back(1);
+        list1.push_back(2);
+
+        XORList<int> list2;
+        list2.push_back(3);
+
+        list1.splice(1, list2);
+
+        EXPECT_EQ(list1.size(), 3);
+        EXPECT_EQ(list1.front(), 1);
+        EXPECT_EQ(list1.back(), 2);
+        EXPECT_TRUE(list2.empty());
+
+        auto it = list1.begin();
+        EXPECT_EQ(*it, 1);
+        ++it;
+        EXPECT_EQ(*it, 3);
+        ++it;
+        EXPECT_EQ(*it, 2);
+    }
+
+    TEST(XORListTest, SpliceRange)
+    {
+        XORList<int> list1;
+        list1.push_back(1);
+        list1.push_back(2);
+
+        XORList<int> list2;
+        list2.push_back(3);
+        list2.push_back(4);
+
+        list1.splice(1, list2);
+
+        EXPECT_EQ(list1.size(), 4);
+        EXPECT_EQ(list1.front(), 1);
+        EXPECT_EQ(list1.back(), 2);
+        EXPECT_TRUE(list2.empty());
+
+        auto it = list1.begin();
+        EXPECT_EQ(*it, 1);
+        ++it;
+        EXPECT_EQ(*it, 3);
+        ++it;
+        EXPECT_EQ(*it, 4);
+        ++it;
+        EXPECT_EQ(*it, 2);
+    }
+
+    // Boundary Conditions
+
+    TEST(XORListTest, MaxSizeBoundary)
+    {
+        XORList<int> list;
+        EXPECT_EQ(list.max_size(), std::numeric_limits<size_t>::max());
+    }
+
 } // namespace scc
