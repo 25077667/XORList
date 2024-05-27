@@ -306,12 +306,17 @@ namespace scc
 
             bool operator<(const XORListIterator &other) const
             {
-                XORListIterator it = *this;
-                while (it != other && it != list_->end())
-                {
-                    ++it;
-                }
-                return it == other;
+                // lexigraphical comparison
+                if (list_ != other.list_)
+                    return false;
+
+                if (prev_ == nullptr && other.prev_ == nullptr)
+                    return current_ < other.current_;
+                if (prev_ == nullptr)
+                    return true;
+                if (other.prev_ == nullptr)
+                    return false;
+                return prev_ < other.prev_;
             }
 
             bool operator==(const XORListIterator &other) const { return current_ == other.current_; }
