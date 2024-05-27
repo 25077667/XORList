@@ -232,7 +232,6 @@ namespace scc
         EXPECT_EQ(*rit, 3);
     }
 
-    // test sort
     TEST(XORListTest, Sort)
     {
         XORList<int> list;
@@ -244,6 +243,115 @@ namespace scc
         EXPECT_EQ(list.size(), 3);
         EXPECT_EQ(list.front(), 1);
         EXPECT_EQ(list.back(), 3);
+    }
+
+    TEST(XORListTest, Clear)
+    {
+        XORList<int> list;
+        list.push_back(1);
+        list.push_back(2);
+        list.push_back(3);
+        list.clear();
+
+        EXPECT_EQ(list.size(), 0);
+        EXPECT_TRUE(list.empty());
+    }
+
+    TEST(XORListTest, MaxSize)
+    {
+        XORList<int> list;
+        EXPECT_EQ(list.max_size(), std::numeric_limits<size_t>::max());
+    }
+
+    TEST(XORListTest, Emplace)
+    {
+        XORList<std::pair<int, int>> list;
+        list.emplace(0, 1, 2); // Emplace at the front
+        list.emplace(1, 3, 4); // Emplace at the back
+
+        EXPECT_EQ(list.size(), 2);
+        EXPECT_EQ(list.front(), std::make_pair(1, 2));
+        EXPECT_EQ(list.back(), std::make_pair(3, 4));
+    }
+
+    TEST(XORListTest, EmplaceBack)
+    {
+        XORList<std::pair<int, int>> list;
+        list.emplace_back(1, 2);
+        list.emplace_back(3, 4);
+
+        EXPECT_EQ(list.size(), 2);
+        EXPECT_EQ(list.front(), std::make_pair(1, 2));
+        EXPECT_EQ(list.back(), std::make_pair(3, 4));
+    }
+
+    TEST(XORListTest, Splice)
+    {
+        XORList<int> list1;
+        list1.push_back(1);
+        list1.push_back(2);
+
+        XORList<int> list2;
+        list2.push_back(3);
+        list2.push_back(4);
+
+        list1.splice(1, list2);
+
+        EXPECT_EQ(list1.size(), 4);
+        EXPECT_EQ(list1.front(), 1);
+        EXPECT_EQ(list1.back(), 2);
+        EXPECT_TRUE(list2.empty());
+
+        auto it = list1.begin();
+        EXPECT_EQ(*it, 1);
+        ++it;
+        EXPECT_EQ(*it, 3);
+        ++it;
+        EXPECT_EQ(*it, 4);
+        ++it;
+        EXPECT_EQ(*it, 2);
+    }
+
+    TEST(XORListTest, Merge)
+    {
+        XORList<int> list1;
+        list1.push_back(1);
+        list1.push_back(3);
+        list1.push_back(5);
+
+        XORList<int> list2;
+        list2.push_back(2);
+        list2.push_back(4);
+        list2.push_back(6);
+
+        list1.merge(list2);
+
+        EXPECT_EQ(list1.size(), 6);
+        EXPECT_EQ(list1.front(), 1);
+        EXPECT_EQ(list1.back(), 6);
+        EXPECT_TRUE(list2.empty());
+
+        auto it = list1.begin();
+        EXPECT_EQ(*it, 1);
+        ++it;
+        EXPECT_EQ(*it, 3);
+        ++it;
+        EXPECT_EQ(*it, 5);
+        ++it;
+        EXPECT_EQ(*it, 2);
+        ++it;
+        EXPECT_EQ(*it, 4);
+        ++it;
+        EXPECT_EQ(*it, 6);
+    }
+
+    TEST(XORListTest, GetAllocator)
+    {
+        XORList<int> list;
+        auto allocator = list.get_allocator();
+
+        int *p = allocator.allocate(1);
+        allocator.deallocate(p, 1);
     }
 
     // Robustness Tests

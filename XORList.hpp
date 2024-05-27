@@ -42,6 +42,60 @@ namespace scc
         XORList() noexcept(canThrow == CanThrow::NoThrow)
             : m_head_(nullptr), m_tail_(nullptr), m_size_(0) {}
 
+        XORList(size_t count, const T &value) noexcept(canThrow == CanThrow::NoThrow)
+            : m_head_(nullptr), m_tail_(nullptr), m_size_(0)
+        {
+            for (size_t i = 0; i < count; ++i)
+            {
+                push_back(value);
+            }
+        }
+
+        explicit XORList(size_t count) noexcept(canThrow == CanThrow::NoThrow)
+            : m_head_(nullptr), m_tail_(nullptr), m_size_(0)
+        {
+            for (size_t i = 0; i < count; ++i)
+            {
+                push_back(T());
+            }
+        }
+
+        template <class InputIt>
+        XORList(InputIt first, InputIt last) noexcept(canThrow == CanThrow::NoThrow)
+            : m_head_(nullptr), m_tail_(nullptr), m_size_(0)
+        {
+            for (InputIt it = first; it != last; ++it)
+            {
+                push_back(*it);
+            }
+        }
+
+        XORList(const XORList &other) noexcept(canThrow == CanThrow::NoThrow)
+            : m_head_(nullptr), m_tail_(nullptr), m_size_(0)
+        {
+            for (Node *current = other.m_head_, *prev = nullptr, *next; current != nullptr; prev = current, current = next)
+            {
+                next = XOR(prev, current->npx);
+                push_back(current->data);
+            }
+        }
+
+        XORList(XORList &&other) noexcept(canThrow == CanThrow::NoThrow)
+            : m_head_(other.m_head_), m_tail_(other.m_tail_), m_size_(other.m_size_)
+        {
+            other.m_head_ = other.m_tail_ = nullptr;
+            other.m_size_ = 0;
+        }
+
+        XORList(std::initializer_list<T> init) noexcept(canThrow == CanThrow::NoThrow)
+            : m_head_(nullptr), m_tail_(nullptr), m_size_(0)
+        {
+            for (const T &value : init)
+            {
+                push_back(value);
+            }
+        }
+
         ~XORList()
         {
             clear();
@@ -331,6 +385,37 @@ namespace scc
             ++m_size_;
         }
 
+        template <typename... Args>
+        void emplace_front(Args &&...args) noexcept(canThrow == CanThrow::NoThrow)
+        {
+            Node *newNode = new (std::nothrow) Node(T(std::forward<Args>(args)...));
+            if (!newNode)
+            {
+                if constexpr (canThrow == CanThrow::Throw)
+                {
+                    throw std::bad_alloc();
+                }
+                else
+                {
+                    return; // No operation on allocation failure
+                }
+            }
+
+            newNode->npx = m_head_;
+
+            if (m_head_ != nullptr)
+            {
+                m_head_->npx = XOR(newNode, m_head_->npx);
+            }
+            else
+            {
+                m_tail_ = newNode;
+            }
+
+            m_head_ = newNode;
+            ++m_size_;
+        }
+
         void resize(size_t count, const T &value = T()) noexcept(canThrow == CanThrow::NoThrow)
         {
             if (count < m_size_)
@@ -401,6 +486,11 @@ namespace scc
 
         void clear() noexcept
         {
+            if (empty())
+            {
+                return;
+            }
+
             Node *current = m_head_;
             Node *prev = nullptr;
             Node *next;
@@ -702,42 +792,47 @@ namespace scc
 
             if (position == 0)
             {
-                Node *other_tail = other_list.m_tail_;
-                other_tail->npx = XOR(other_tail->npx, m_head_);
-
                 if (m_head_ != nullptr)
                 {
-                    m_head_->npx = XOR(other_tail, XOR(nullptr, m_head_->npx));
+                    other_list.m_tail_->npx = XOR(other_list.m_tail_->npx, m_head_);
+                    m_head_->npx = XOR(other_list.m_tail_, XOR(nullptr, m_head_->npx));
                 }
                 else
                 {
-                    m_tail_ = other_tail;
+                    m_tail_ = other_list.m_tail_;
                 }
 
                 m_head_ = other_list.m_head_;
-                m_size_ += other_list.m_size_;
-                other_list.m_head_ = other_list.m_tail_ = nullptr;
-                other_list.m_size_ = 0;
-                return;
             }
-
-            Node *prev = nullptr;
-            Node *current = m_head_;
-            Node *next;
-
-            for (size_t i = 0; i < position; ++i)
+            else if (position == m_size_)
             {
-                next = XOR(prev, current->npx);
-                prev = current;
-                current = next;
-            }
+                m_tail_->npx = XOR(m_tail_->npx, other_list.m_head_);
+                other_list.m_head_->npx = XOR(m_tail_, other_list.m_head_->npx);
 
-            Node *other_tail = other_list.m_tail_;
-            other_tail->npx = XOR(other_tail->npx, current);
-            prev->npx = XOR(XOR(prev->npx, current), other_list.m_head_);
-            other_list.m_head_->npx = XOR(prev, other_list.m_head_->npx);
+                m_tail_ = other_list.m_tail_;
+            }
+            else
+            {
+                Node *prev = nullptr;
+                Node *current = m_head_;
+                Node *next;
+
+                for (size_t i = 0; i < position; ++i)
+                {
+                    next = XOR(prev, current->npx);
+                    prev = current;
+                    current = next;
+                }
+
+                Node *other_tail = other_list.m_tail_;
+                other_tail->npx = XOR(other_tail->npx, current);
+                prev->npx = XOR(XOR(prev->npx, current), other_list.m_head_);
+                other_list.m_head_->npx = XOR(prev, other_list.m_head_->npx);
+                current->npx = XOR(other_list.m_tail_, XOR(prev, current->npx));
+            }
 
             m_size_ += other_list.m_size_;
+
             other_list.m_head_ = other_list.m_tail_ = nullptr;
             other_list.m_size_ = 0;
         }
