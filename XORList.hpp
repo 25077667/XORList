@@ -18,7 +18,7 @@ namespace scc
         Throw,
     };
 
-    template <typename T, CanThrow canThrow = CanThrow::NoThrow>
+    template <typename T, CanThrow canThrow = CanThrow::NoThrow, typename Allocator = std::allocator<T>>
     class XORList
     {
     private:
@@ -33,6 +33,8 @@ namespace scc
         Node *m_head_;
         Node *m_tail_;
         size_t m_size_;
+        using NodeAllocator = typename std::allocator_traits<Allocator>::template rebind_alloc<Node>;
+        NodeAllocator alloc_;
 
         Node *XOR(Node *a, Node *b)
         {
@@ -44,34 +46,25 @@ namespace scc
             return reinterpret_cast<const Node *>(reinterpret_cast<uintptr_t>(a) ^ reinterpret_cast<uintptr_t>(b));
         }
 
-        Node *allocate_node(const T &value) noexcept(canThrow == CanThrow::NoThrow)
+        Node *allocate_node(const T &value)
         {
-            Node *newNode = new (std::nothrow) Node(value);
-            if (!newNode)
-            {
-                if constexpr (canThrow == CanThrow::Throw)
-                {
-                    throw std::bad_alloc();
-                }
-                else
-                {
-                    return nullptr; // No operation on allocation failure
-                }
-            }
+            Node *newNode = std::allocator_traits<NodeAllocator>::allocate(alloc_, 1);
+            std::allocator_traits<NodeAllocator>::construct(alloc_, newNode, value);
             return newNode;
         }
 
         void deallocate_node(Node *node)
         {
-            delete node;
+            std::allocator_traits<NodeAllocator>::destroy(alloc_, node);
+            std::allocator_traits<NodeAllocator>::deallocate(alloc_, node, 1);
         }
 
     public:
-        XORList() noexcept(canThrow == CanThrow::NoThrow)
-            : m_head_(nullptr), m_tail_(nullptr), m_size_(0) {}
+        explicit XORList(const Allocator &allocator = Allocator()) noexcept(canThrow == CanThrow::NoThrow)
+            : m_head_(nullptr), m_tail_(nullptr), m_size_(0), alloc_(allocator) {}
 
-        XORList(size_t count, const T &value) noexcept(canThrow == CanThrow::NoThrow)
-            : m_head_(nullptr), m_tail_(nullptr), m_size_(0)
+        XORList(size_t count, const T &value, const Allocator &allocator = Allocator()) noexcept(canThrow == CanThrow::NoThrow)
+            : m_head_(nullptr), m_tail_(nullptr), m_size_(0), alloc_(allocator)
         {
             for (size_t i = 0; i < count; ++i)
             {
@@ -79,8 +72,8 @@ namespace scc
             }
         }
 
-        explicit XORList(size_t count) noexcept(canThrow == CanThrow::NoThrow)
-            : m_head_(nullptr), m_tail_(nullptr), m_size_(0)
+        explicit XORList(size_t count, const Allocator &allocator = Allocator()) noexcept(canThrow == CanThrow::NoThrow)
+            : m_head_(nullptr), m_tail_(nullptr), m_size_(0), alloc_(allocator)
         {
             for (size_t i = 0; i < count; ++i)
             {
@@ -89,8 +82,8 @@ namespace scc
         }
 
         template <class InputIt>
-        XORList(InputIt first, InputIt last) noexcept(canThrow == CanThrow::NoThrow)
-            : m_head_(nullptr), m_tail_(nullptr), m_size_(0)
+        XORList(InputIt first, InputIt last, const Allocator &allocator = Allocator()) noexcept(canThrow == CanThrow::NoThrow)
+            : m_head_(nullptr), m_tail_(nullptr), m_size_(0), alloc_(allocator)
         {
             for (InputIt it = first; it != last; ++it)
             {
@@ -99,7 +92,7 @@ namespace scc
         }
 
         XORList(const XORList &other) noexcept(canThrow == CanThrow::NoThrow)
-            : m_head_(nullptr), m_tail_(nullptr), m_size_(0)
+            : m_head_(nullptr), m_tail_(nullptr), m_size_(0), alloc_(std::allocator_traits<NodeAllocator>::select_on_container_copy_construction(other.alloc_))
         {
             for (Node *current = other.m_head_, *prev = nullptr, *next; current != nullptr; prev = current, current = next)
             {
@@ -109,14 +102,14 @@ namespace scc
         }
 
         XORList(XORList &&other) noexcept(canThrow == CanThrow::NoThrow)
-            : m_head_(other.m_head_), m_tail_(other.m_tail_), m_size_(other.m_size_)
+            : m_head_(other.m_head_), m_tail_(other.m_tail_), m_size_(other.m_size_), alloc_(std::move(other.alloc_))
         {
             other.m_head_ = other.m_tail_ = nullptr;
             other.m_size_ = 0;
         }
 
-        XORList(std::initializer_list<T> init) noexcept(canThrow == CanThrow::NoThrow)
-            : m_head_(nullptr), m_tail_(nullptr), m_size_(0)
+        XORList(std::initializer_list<T> init, const Allocator &allocator = Allocator()) noexcept(canThrow == CanThrow::NoThrow)
+            : m_head_(nullptr), m_tail_(nullptr), m_size_(0), alloc_(allocator)
         {
             for (const T &value : init)
             {
@@ -168,6 +161,35 @@ namespace scc
         {
             clear();
         }
+
+        XORList &operator=(const XORList &other) noexcept(canThrow == CanThrow::NoThrow)
+        {
+            if (this != &other)
+            {
+                clear();
+                for (Node *current = other.m_head_, *prev = nullptr, *next; current != nullptr; prev = current, current = next)
+                {
+                    next = XOR(prev, current->npx);
+                    push_back(current->data);
+                }
+            }
+            return *this;
+        }
+
+        void assign(size_t count, const T &value) noexcept(canThrow == CanThrow::NoThrow)
+        {
+            clear();
+            for (size_t i = 0; i < count; ++i)
+            {
+                push_back(value);
+            }
+        }
+
+        std::allocator<T> get_allocator() const noexcept
+        {
+            return std::allocator<T>();
+        }
+
         template <bool IsConst>
         class XORListIterator
         {
@@ -299,34 +321,6 @@ namespace scc
         // Aliases for iterator and const_iterator
         using iterator = XORListIterator<false>;
         using const_iterator = XORListIterator<true>;
-
-        XORList &operator=(const XORList &other) noexcept(canThrow == CanThrow::NoThrow)
-        {
-            if (this != &other)
-            {
-                clear();
-                for (Node *current = other.m_head_, *prev = nullptr, *next; current != nullptr; prev = current, current = next)
-                {
-                    next = XOR(prev, current->npx);
-                    push_back(current->data);
-                }
-            }
-            return *this;
-        }
-
-        void assign(size_t count, const T &value) noexcept(canThrow == CanThrow::NoThrow)
-        {
-            clear();
-            for (size_t i = 0; i < count; ++i)
-            {
-                push_back(value);
-            }
-        }
-
-        std::allocator<T> get_allocator() const noexcept
-        {
-            return std::allocator<T>();
-        }
 
         iterator begin() noexcept
         {
