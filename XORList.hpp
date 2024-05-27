@@ -44,6 +44,28 @@ namespace scc
             return reinterpret_cast<const Node *>(reinterpret_cast<uintptr_t>(a) ^ reinterpret_cast<uintptr_t>(b));
         }
 
+        Node *allocate_node(const T &value) noexcept(canThrow == CanThrow::NoThrow)
+        {
+            Node *newNode = new (std::nothrow) Node(value);
+            if (!newNode)
+            {
+                if constexpr (canThrow == CanThrow::Throw)
+                {
+                    throw std::bad_alloc();
+                }
+                else
+                {
+                    return nullptr; // No operation on allocation failure
+                }
+            }
+            return newNode;
+        }
+
+        void deallocate_node(Node *node)
+        {
+            delete node;
+        }
+
     public:
         XORList() noexcept(canThrow == CanThrow::NoThrow)
             : m_head_(nullptr), m_tail_(nullptr), m_size_(0) {}
@@ -377,17 +399,10 @@ namespace scc
                 return;
             }
 
-            Node *newNode = new (std::nothrow) Node(T(std::forward<Args>(args)...));
+            Node *newNode = allocate_node(T(std::forward<Args>(args)...));
             if (!newNode)
             {
-                if constexpr (canThrow == CanThrow::Throw)
-                {
-                    throw std::bad_alloc();
-                }
-                else
-                {
-                    return; // No operation on allocation failure
-                }
+                return; // No operation on allocation failure
             }
 
             Node *prev = nullptr;
@@ -411,17 +426,10 @@ namespace scc
         template <typename... Args>
         void emplace_back(Args &&...args) noexcept(canThrow == CanThrow::NoThrow)
         {
-            Node *newNode = new (std::nothrow) Node(T(std::forward<Args>(args)...));
+            Node *newNode = allocate_node(T(std::forward<Args>(args)...));
             if (!newNode)
             {
-                if constexpr (canThrow == CanThrow::Throw)
-                {
-                    throw std::bad_alloc();
-                }
-                else
-                {
-                    return; // No operation on allocation failure
-                }
+                return; // No operation on allocation failure
             }
 
             newNode->npx = m_tail_;
@@ -442,17 +450,10 @@ namespace scc
         template <typename... Args>
         void emplace_front(Args &&...args) noexcept(canThrow == CanThrow::NoThrow)
         {
-            Node *newNode = new (std::nothrow) Node(T(std::forward<Args>(args)...));
+            Node *newNode = allocate_node(T(std::forward<Args>(args)...));
             if (!newNode)
             {
-                if constexpr (canThrow == CanThrow::Throw)
-                {
-                    throw std::bad_alloc();
-                }
-                else
-                {
-                    return; // No operation on allocation failure
-                }
+                return; // No operation on allocation failure
             }
 
             newNode->npx = m_head_;
@@ -515,7 +516,7 @@ namespace scc
                         m_tail_ = current;
                     }
 
-                    delete next;
+                    deallocate_node(next);
                     next = next_next;
                     --m_size_;
                 }
@@ -552,7 +553,7 @@ namespace scc
             while (current != nullptr)
             {
                 next = XOR(prev, current->npx);
-                delete current;
+                deallocate_node(current);
                 prev = current;
                 current = next;
             }
@@ -563,17 +564,10 @@ namespace scc
 
         void push_front(const T &value) noexcept(canThrow == CanThrow::NoThrow)
         {
-            Node *newNode = new (std::nothrow) Node(value);
+            Node *newNode = allocate_node(value);
             if (!newNode)
             {
-                if constexpr (canThrow == CanThrow::Throw)
-                {
-                    throw std::bad_alloc();
-                }
-                else
-                {
-                    return; // No operation on allocation failure
-                }
+                return; // No operation on allocation failure
             }
 
             newNode->npx = m_head_;
@@ -593,17 +587,10 @@ namespace scc
 
         void push_back(const T &value) noexcept(canThrow == CanThrow::NoThrow)
         {
-            Node *newNode = new (std::nothrow) Node(value);
+            Node *newNode = allocate_node(value);
             if (!newNode)
             {
-                if constexpr (canThrow == CanThrow::Throw)
-                {
-                    throw std::bad_alloc();
-                }
-                else
-                {
-                    return; // No operation on allocation failure
-                }
+                return; // No operation on allocation failure
             }
 
             newNode->npx = m_tail_;
@@ -690,7 +677,7 @@ namespace scc
             }
 
             m_head_ = next;
-            delete temp;
+            deallocate_node(temp);
             --m_size_;
         }
 
@@ -721,7 +708,7 @@ namespace scc
             }
 
             m_tail_ = prev;
-            delete temp;
+            deallocate_node(temp);
             --m_size_;
         }
 
@@ -750,17 +737,10 @@ namespace scc
                 return;
             }
 
-            Node *newNode = new (std::nothrow) Node(value);
+            Node *newNode = allocate_node(value);
             if (!newNode)
             {
-                if constexpr (canThrow == CanThrow::Throw)
-                {
-                    throw std::bad_alloc();
-                }
-                else
-                {
-                    return; // No operation on allocation failure
-                }
+                return; // No operation on allocation failure
             }
 
             Node *prev = nullptr;
@@ -821,7 +801,7 @@ namespace scc
             prev->npx = XOR(XOR(prev->npx, current), next_next);
             next_next->npx = XOR(prev, XOR(current, next_next->npx));
 
-            delete current;
+            deallocate_node(current);
             --m_size_;
         }
 
