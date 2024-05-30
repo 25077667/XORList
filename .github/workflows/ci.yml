@@ -5,6 +5,8 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  release:
+    types: [created]
 
 jobs:
   build:
@@ -41,3 +43,29 @@ jobs:
     - name: Run unit tests
       run: |
         ctest --test-dir build --output-on-failure
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Create release zip file
+      run: |
+        zip -r release.zip .
+
+    - name: Create release tarball file
+      run: |
+        tar -czvf release.tar.gz .
+
+    - name: Create Release
+      id: create_release
+      uses: softprops/action-gh-release@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        files: |
+          release.zip
+          release.tar.gz
