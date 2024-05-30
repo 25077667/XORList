@@ -54,9 +54,9 @@ if (CMAKE_BUILD_TYPE MATCHES "Release")
     add_compile_definitions(NDEBUG)
 endif()
 
-# if defined DISABLE_TESTS, do not build tests
+# if defined XORLIST_DISABLE_TESTS, do not build tests
 function(BuildTests)
-    if (DEFINED DISABLE_TESTS)
+    if (DEFINED XORLIST_DISABLE_TESTS)
         return()
     endif()
     # Fetch and include GoogleTest and GoogleBenchmark
