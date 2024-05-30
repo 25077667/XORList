@@ -54,38 +54,46 @@ if (CMAKE_BUILD_TYPE MATCHES "Release")
     add_compile_definitions(NDEBUG)
 endif()
 
-# Fetch and include GoogleTest and GoogleBenchmark
-include(FetchContent)
-FetchContent_Declare(
-    googletest
-    URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
-)
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_Declare(
-    googlebenchmark
-    GIT_REPOSITORY https://github.com/google/benchmark.git
-    GIT_TAG main
-)
-set(BENCHMARK_ENABLE_TESTING off)
-FetchContent_MakeAvailable(googletest googlebenchmark)
+# if defined DISABLE_TESTS, do not build tests
+function(BuildTests)
+    if (DEFINED DISABLE_TESTS)
+        return()
+    endif()
+    # Fetch and include GoogleTest and GoogleBenchmark
+    include(FetchContent)
+    FetchContent_Declare(
+        googletest
+        URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
+    )
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    FetchContent_Declare(
+        googlebenchmark
+        GIT_REPOSITORY https://github.com/google/benchmark.git
+        GIT_TAG main
+    )
+    set(BENCHMARK_ENABLE_TESTING off)
+    FetchContent_MakeAvailable(googletest googlebenchmark)
 
-# Enable testing
-enable_testing()
-include(GoogleTest)
+    # Enable testing
+    enable_testing()
+    include(GoogleTest)
 
-# Add test sources
-file(GLOB_RECURSE TEST_SOURCES ${CMAKE_SOURCE_DIR}/tests/*.cpp)
-foreach(source ${TEST_SOURCES})
-    get_filename_component(name ${source} NAME_WE)
-    add_executable(t_${name} ${source})
-    target_link_libraries(t_${name} GTest::gtest_main)
-    gtest_discover_tests(t_${name})
-endforeach()
+    # Add test sources
+    file(GLOB_RECURSE TEST_SOURCES ${CMAKE_SOURCE_DIR}/tests/*.cpp)
+    foreach(source ${TEST_SOURCES})
+        get_filename_component(name ${source} NAME_WE)
+        add_executable(t_${name} ${source})
+        target_link_libraries(t_${name} GTest::gtest_main)
+        gtest_discover_tests(t_${name})
+    endforeach()
 
-# Add benchmark sources
-file(GLOB_RECURSE BENCHMARK_SOURCES ${CMAKE_SOURCE_DIR}/benchmark/*.cpp)
-foreach(source ${BENCHMARK_SOURCES})
-    get_filename_component(name ${source} NAME_WE)
-    add_executable(b_${name} ${source})
-    target_link_libraries(b_${name} benchmark::benchmark)
-endforeach()
+    # Add benchmark sources
+    file(GLOB_RECURSE BENCHMARK_SOURCES ${CMAKE_SOURCE_DIR}/benchmark/*.cpp)
+    foreach(source ${BENCHMARK_SOURCES})
+        get_filename_component(name ${source} NAME_WE)
+        add_executable(b_${name} ${source})
+        target_link_libraries(b_${name} benchmark::benchmark)
+    endforeach()
+endfunction(BuildTests)
+
+BuildTests()
