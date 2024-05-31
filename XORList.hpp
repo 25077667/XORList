@@ -185,9 +185,9 @@ namespace scc
             }
         }
 
-        std::allocator<T> get_allocator() const noexcept
+        auto get_allocator() const noexcept
         {
-            return std::allocator<T>();
+            return Allocator(alloc_);
         }
 
         template <bool IsConst>
