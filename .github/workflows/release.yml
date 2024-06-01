@@ -2,12 +2,8 @@ name: C/C++ Major/Minor Release CI
 
 on:
   push:
-    branches: [ main ]
     tags:
       - 'v*.*.*'  # Trigger the workflow on version tags like v1.0.0
-      - '!main'
-  pull_request:
-    branches: [ main ]
   release:
     types: [created]
 
