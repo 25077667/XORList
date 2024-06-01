@@ -52,11 +52,28 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Get commit count
-      id: get_commit_count
+    # - name: Get commit count
+    #   id: get_commit_count
+    #   run: |
+    #     COMMIT_COUNT=$(git rev-list --count HEAD)
+    #     echo "commit_count=$COMMIT_COUNT" >> $GITHUB_OUTPUT
+    - name: Get latest release
+      id: get_latest_release
       run: |
-        COMMIT_COUNT=$(git rev-list --count HEAD)
-        echo "commit_count=$COMMIT_COUNT" >> $GITHUB_OUTPUT
+        latest_release=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r .tag_name)
+        echo "latest_release=${latest_release}" >> $GITHUB_ENV
+
+    - name: Determine next version
+      id: next_version
+      run: |
+        if [ "${{ env.latest_release }}" = "null" ]; then
+          echo "new_version=0.1.0" >> $GITHUB_ENV
+        else
+          IFS='.' read -r major minor patch <<< "${{ env.latest_release#v }}"
+          patch=$((patch + 1))
+          new_version="$major.$minor.$patch"
+          echo "new_version=$new_version" >> $GITHUB_ENV
+        fi
 
     - name: Create release directory
       run: |
@@ -80,9 +97,9 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GH_PAT }}
       with:
-        tag_name: "v${{ steps.get_commit_count.outputs.commit_count }}"
-        name: "Release v${{ steps.get_commit_count.outputs.commit_count }}"
-        body: "Release for commit number ${{ steps.get_commit_count.outputs.commit_count }}"
+        tag_name: "v${{ env.new_version }}"
+        name: "Release v${{ env.new_version }}"
+        body: "Release for commit number v${{ env.new_version }}"
         files: |
           release.zip
           release.tar.gz
