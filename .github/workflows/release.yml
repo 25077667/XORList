@@ -1,0 +1,85 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*.*.*'  # Trigger the workflow on version tags like v1.0.0
+  pull_request:
+    branches: [ main ]
+  release:
+    types: [created]
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Cache CMake and build files
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache
+          build
+        key: ${{ runner.os }}-cmake-${{ hashFiles('**/CMakeLists.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-cmake-
+
+    - name: Install C++ build tools and dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake g++ make build-essential --no-install-recommends
+
+    - name: Configure CMake
+      run: |
+        mkdir -p build
+        cmake -S . -B build
+
+    - name: Build the project
+      run: |
+        cmake --build build
+
+    - name: Run unit tests
+      run: |
+        ctest --test-dir build --output-on-failure
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+   
+    - name: Create release directory
+      run: |
+        mkdir release
+        shopt -s extglob
+        cp -r !(release) release/
+
+    - name: Create release zip file
+      run: |
+        cd release
+        zip -r ../release.zip .
+
+    - name: Create release tarball file
+      run: |
+        cd release
+        tar -czvf ../release.tar.gz .
+
+    - name: Create Release
+      id: create_release
+      uses: softprops/action-gh-release@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+      with:
+        tag_name: "v${{ github.ref_name }}"
+        name: "Release v${{ github.ref_name }}"
+        body: "Release for commit number v${{ github.ref_name }}"
+        files: |
+          release.zip
+          release.tar.gz
