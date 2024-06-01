@@ -3,6 +3,8 @@ name: C/C++ CI
 on:
   push:
     branches: [ main ]
+    tags-ignore: 
+      - '*'  # Ignore all tag pushes
   pull_request:
     branches: [ main ]
   release:
