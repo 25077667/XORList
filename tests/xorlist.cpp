@@ -537,6 +537,71 @@ namespace scc
         EXPECT_EQ(list.back(), 2);
     }
 
+    TEST(XORListTest, Swap)
+    {
+        XORList<int> list1;
+        list1.push_back(1);
+        list1.push_back(2);
+        list1.push_back(3);
+
+        XORList<int> list2;
+        list2.push_back(4);
+        list2.push_back(5);
+
+        list1.swap(list2);
+
+        // Check contents of list1 after swap
+        EXPECT_EQ(list1.size(), 2);
+        auto it = list1.begin();
+        EXPECT_EQ(*it++, 4);
+        EXPECT_EQ(*it++, 5);
+
+        // Check contents of list2 after swap
+        EXPECT_EQ(list2.size(), 3);
+        it = list2.begin();
+        EXPECT_EQ(*it++, 1);
+        EXPECT_EQ(*it++, 2);
+        EXPECT_EQ(*it++, 3);
+    }
+
+    TEST(XORListTest, SwapSameAllocator)
+    {
+        XORList<int> list1;
+        XORList<int> list2;
+        list1.push_back(1);
+        list2.push_back(2);
+
+        list1.swap(list2);
+
+        // Check if the swap occurred correctly
+        EXPECT_EQ(list1.size(), 1);
+        EXPECT_EQ(list2.size(), 1);
+
+        EXPECT_EQ(list1.front(), 2);
+        EXPECT_EQ(list2.front(), 1);
+    }
+
+    TEST(XORListTest, SwapDifferentAllocator)
+    {
+        using AllocatorType = std::allocator<int>;
+
+        XORList<int, CanThrow::NoThrow, AllocatorType> list1{AllocatorType()};
+        XORList<int, CanThrow::NoThrow, AllocatorType> list2{AllocatorType()};
+
+        list1.push_back(1);
+        list1.push_back(2);
+        list2.push_back(3);
+
+        list1.swap(list2);
+
+        // Check if the swap occurred correctly
+        EXPECT_EQ(list1.size(), 1);
+        EXPECT_EQ(list2.size(), 2);
+
+        EXPECT_EQ(list1.front(), 3);
+        EXPECT_EQ(list2.front(), 1);
+    }
+
     TEST(XORListTest, Unique)
     {
         XORList<int> list;

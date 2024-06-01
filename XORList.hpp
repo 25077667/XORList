@@ -848,6 +848,20 @@ namespace scc
             }
         }
 
+        void swap(XORList &other) noexcept
+        {
+            using std::swap;
+
+            if constexpr (std::allocator_traits<NodeAllocator>::propagate_on_container_swap::value)
+            {
+                swap(alloc_, other.alloc_);
+            }
+
+            swap(m_head_, other.m_head_);
+            swap(m_tail_, other.m_tail_);
+            swap(m_size_, other.m_size_);
+        }
+
         void merge(XORList<T> &other_list) noexcept
         {
             if (other_list.empty())
