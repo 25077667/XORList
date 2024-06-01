@@ -955,6 +955,89 @@ namespace scc
             other_list.m_size_ = 0;
         }
 
+        size_t remove(const T &value) noexcept(canThrow == CanThrow::NoThrow)
+        {
+            size_t count = 0;
+            Node *prev = nullptr;
+            Node *current = m_head_;
+            Node *next = nullptr;
+
+            while (current != nullptr)
+            {
+                next = XOR(prev, current->npx);
+                if (current->data == value)
+                {
+                    if (prev != nullptr)
+                    {
+                        prev->npx = XOR(XOR(prev->npx, current), next);
+                    }
+                    else
+                    {
+                        m_head_ = next;
+                    }
+                    if (next != nullptr)
+                    {
+                        next->npx = XOR(prev, XOR(current, next->npx));
+                    }
+                    else
+                    {
+                        m_tail_ = prev;
+                    }
+                    deallocate_node(current);
+                    --m_size_;
+                    ++count;
+                }
+                else
+                {
+                    prev = current;
+                }
+                current = next;
+            }
+            return count;
+        }
+
+        template <class UnaryPredicate>
+        size_t remove_if(UnaryPredicate p) noexcept(canThrow == CanThrow::NoThrow)
+        {
+            size_t count = 0;
+            Node *prev = nullptr;
+            Node *current = m_head_;
+            Node *next = nullptr;
+
+            while (current != nullptr)
+            {
+                next = XOR(prev, current->npx);
+                if (p(current->data))
+                {
+                    if (prev != nullptr)
+                    {
+                        prev->npx = XOR(XOR(prev->npx, current), next);
+                    }
+                    else
+                    {
+                        m_head_ = next;
+                    }
+                    if (next != nullptr)
+                    {
+                        next->npx = XOR(prev, XOR(current, next->npx));
+                    }
+                    else
+                    {
+                        m_tail_ = prev;
+                    }
+                    deallocate_node(current);
+                    --m_size_;
+                    ++count;
+                }
+                else
+                {
+                    prev = current;
+                }
+                current = next;
+            }
+            return count;
+        }
+
         void reverse() noexcept
         {
             Node *temp = m_head_;

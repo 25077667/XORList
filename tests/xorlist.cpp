@@ -1077,4 +1077,44 @@ namespace scc
         EXPECT_EQ(list.max_size(), std::numeric_limits<size_t>::max());
     }
 
+    TEST(XORListTest, Remove)
+    {
+        XORList<int> list;
+        list.push_back(1);
+        list.push_back(2);
+        list.push_back(3);
+        list.push_back(2);
+        list.push_back(4);
+
+        size_t removed_count = list.remove(2);
+
+        EXPECT_EQ(removed_count, 2);
+        EXPECT_EQ(list.size(), 3);
+
+        auto it = list.begin();
+        EXPECT_EQ(*it++, 1);
+        EXPECT_EQ(*it++, 3);
+        EXPECT_EQ(*it++, 4);
+    }
+
+    TEST(XORListTest, RemoveIf)
+    {
+        XORList<int> list;
+        list.push_back(1);
+        list.push_back(2);
+        list.push_back(3);
+        list.push_back(4);
+        list.push_back(5);
+
+        size_t removed_count = list.remove_if([](int value)
+                                              { return value % 2 == 0; });
+
+        EXPECT_EQ(removed_count, 2);
+        EXPECT_EQ(list.size(), 3);
+
+        auto it = list.begin();
+        EXPECT_EQ(*it++, 1);
+        EXPECT_EQ(*it++, 3);
+        EXPECT_EQ(*it++, 5);
+    }
 } // namespace scc
