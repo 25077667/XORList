@@ -55,8 +55,10 @@ jobs:
     - name: Get commit count
       id: get_commit_count
       run: |
-        COMMIT_COUNT=$(git rev-list --count HEAD)
+        git fetch --tags origin
+        COMMIT_COUNT=$(expr 1 '+' $(git tag --list | grep '^v[0-9]\+' | wc -l))
         echo "commit_count=$COMMIT_COUNT" >> $GITHUB_OUTPUT
+        echo "commit_count=$COMMIT_COUNT"
 
     - name: Create release directory
       run: |
