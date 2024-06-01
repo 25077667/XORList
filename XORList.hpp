@@ -228,6 +228,25 @@ namespace scc
             }
         }
 
+        template <class InputIt, typename = std::_RequireInputIter<InputIt>>
+        void assign(InputIt first, InputIt last) noexcept(canThrow == CanThrow::NoThrow)
+        {
+            clear();
+            for (InputIt it = first; it != last; ++it)
+            {
+                push_back(*it);
+            }
+        }
+
+        void assign(std::initializer_list<T> ilist) noexcept(canThrow == CanThrow::NoThrow)
+        {
+            clear();
+            for (const T &value : ilist)
+            {
+                push_back(value);
+            }
+        }
+
         auto get_allocator() const noexcept
         {
             return Allocator(alloc_);

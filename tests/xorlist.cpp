@@ -490,6 +490,37 @@ namespace scc
         }
     }
 
+    TEST(XORListTest, AssignRange)
+    {
+        XORList<int> list;
+        std::vector<int> values = {1, 2, 3, 4, 5};
+
+        list.assign(values.begin(), values.end());
+
+        EXPECT_EQ(list.size(), values.size());
+        auto it = list.begin();
+        for (const int &value : values)
+        {
+            EXPECT_EQ(*it++, value);
+        }
+    }
+
+    TEST(XORListTest, AssignInitializerList)
+    {
+        XORList<int> list;
+        list.push_back(0); // Initially populate the list
+
+        list.assign({1, 2, 3, 4, 5});
+
+        EXPECT_EQ(list.size(), 5);
+        auto it = list.begin();
+        EXPECT_EQ(*it++, 1);
+        EXPECT_EQ(*it++, 2);
+        EXPECT_EQ(*it++, 3);
+        EXPECT_EQ(*it++, 4);
+        EXPECT_EQ(*it++, 5);
+    }
+
     TEST(XORListTest, Resize)
     {
         XORList<int> list;
