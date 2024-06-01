@@ -69,7 +69,7 @@ jobs:
       id: next_version
       run: |
         if [ "${{ env.latest_release }}" = "null" ]; then
-          echo "new_version=0.1.0" >> $GITHUB_ENV
+          echo "new_version=v0.1.0" >> $GITHUB_ENV
         else
           IFS='.' read -r major minor patch <<< "${{ env.latest_release }}"
           patch=$((patch + 1))
@@ -99,9 +99,9 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GH_PAT }}
       with:
-        tag_name: "v${{ env.new_version }}"
-        name: "Release v${{ env.new_version }}"
-        body: "Release for commit number v${{ env.new_version }}"
+        tag_name: "${{ env.new_version }}"
+        name: "Release ${{ env.new_version }}"
+        body: "Release for commit number ${{ env.new_version }}"
         files: |
           release.zip
           release.tar.gz
