@@ -327,6 +327,8 @@ namespace scc
             NodeType *current_;
             XORListType *list_;
 
+            friend class XORList<T, canThrow, Allocator>;
+
         public:
             using iterator_category = std::bidirectional_iterator_tag;
             using value_type = T;
@@ -580,54 +582,36 @@ namespace scc
             ++m_size_;
         }
 
-        template <typename... Args>
-        void emplace(size_t position, Args &&...args) noexcept(canThrow == CanThrow::NoThrow)
+        template <class... Args>
+        iterator emplace(const_iterator pos, Args &&...args) noexcept(canThrow == CanThrow::NoThrow)
         {
-            if (position > m_size_)
-            {
-                if constexpr (canThrow == CanThrow::Throw)
-                {
-                    throw std::out_of_range("Position out of range");
-                }
-                else
-                {
-                    return; // No operation on out of range position
-                }
-            }
-
-            if (position == 0)
+            if (pos == cbegin())
             {
                 emplace_front(std::forward<Args>(args)...);
-                return;
+                return begin();
             }
-            if (position == m_size_)
+            if (pos == cend())
             {
                 emplace_back(std::forward<Args>(args)...);
-                return;
+                return --end();
             }
 
             Node *newNode = allocate_node(T(std::forward<Args>(args)...));
             if (!newNode)
             {
-                return; // No operation on allocation failure
+                return end();
             }
 
-            Node *prev = nullptr;
-            Node *current = m_head_;
-            Node *next;
-
-            for (size_t i = 0; i < position; ++i)
-            {
-                next = XOR(prev, current->npx);
-                prev = current;
-                current = next;
-            }
+            Node *prev = const_cast<Node *>(pos.prev_);
+            Node *current = const_cast<Node *>(pos.current_);
+            Node *next = XOR(prev, current->npx);
 
             newNode->npx = XOR(prev, current);
             prev->npx = XOR(XOR(prev->npx, current), newNode);
-            current->npx = XOR(newNode, XOR(prev, current->npx));
+            current->npx = XOR(newNode, next);
 
             ++m_size_;
+            return iterator(prev, newNode, this);
         }
 
         void erase(size_t position) noexcept(canThrow == CanThrow::NoThrow)
@@ -697,13 +681,13 @@ namespace scc
             ++m_size_;
         }
 
-        template <typename... Args>
-        void emplace_back(Args &&...args) noexcept(canThrow == CanThrow::NoThrow)
+        template <class... Args>
+        T &emplace_back(Args &&...args) noexcept(canThrow == CanThrow::NoThrow)
         {
             Node *newNode = allocate_node(T(std::forward<Args>(args)...));
             if (!newNode)
             {
-                return; // No operation on allocation failure
+                return m_tail_->data; // undefined behavior
             }
 
             newNode->npx = m_tail_;
@@ -719,6 +703,7 @@ namespace scc
 
             m_tail_ = newNode;
             ++m_size_;
+            return newNode->data;
         }
 
         void pop_back() noexcept(canThrow == CanThrow::NoThrow)
@@ -775,13 +760,13 @@ namespace scc
             ++m_size_;
         }
 
-        template <typename... Args>
-        void emplace_front(Args &&...args) noexcept(canThrow == CanThrow::NoThrow)
+        template <class... Args>
+        T &emplace_front(Args &&...args) noexcept(canThrow == CanThrow::NoThrow)
         {
             Node *newNode = allocate_node(T(std::forward<Args>(args)...));
             if (!newNode)
             {
-                return; // No operation on allocation failure
+                return m_head_->data; // undefined behavior
             }
 
             newNode->npx = m_head_;
@@ -797,6 +782,7 @@ namespace scc
 
             m_head_ = newNode;
             ++m_size_;
+            return newNode->data;
         }
 
         void pop_front() noexcept(canThrow == CanThrow::NoThrow)

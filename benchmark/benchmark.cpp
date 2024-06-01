@@ -143,7 +143,7 @@ static void BM_XORList_Emplace(benchmark::State &state)
         scc::XORList<int> list;
         for (int i = 0; i < ITERATION_COUNTS; ++i)
         {
-            list.emplace(0, i);
+            list.emplace(list.cbegin(), i);
         }
     }
 }

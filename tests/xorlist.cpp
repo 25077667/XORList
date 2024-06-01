@@ -299,24 +299,87 @@ namespace scc
 
     TEST(XORListTest, Emplace)
     {
-        XORList<std::pair<int, int>> list;
-        list.emplace(0, 1, 2); // Emplace at the front
-        list.emplace(1, 3, 4); // Emplace at the back
+        XORList<int> list = {1, 2, 4};
 
-        EXPECT_EQ(list.size(), 2);
-        EXPECT_EQ(list.front(), std::make_pair(1, 2));
-        EXPECT_EQ(list.back(), std::make_pair(3, 4));
+        // Emplace an element in the middle
+        auto it = list.emplace(++list.cbegin(), 3);
+
+        EXPECT_EQ(list.size(), 4);
+        EXPECT_EQ(*it, 3);
+        EXPECT_EQ(*list.cbegin(), 1);
+        EXPECT_EQ(*(++list.cbegin()), 3);
+        EXPECT_EQ(*(++(++list.cbegin())), 2);
+        EXPECT_EQ(*(++(++(++list.cbegin()))), 4);
+    }
+
+    TEST(XORListTest, EmplaceFront)
+    {
+        XORList<int> list = {2, 3, 4};
+
+        // Emplace an element at the front
+        auto it = list.emplace(list.cbegin(), 1);
+
+        EXPECT_EQ(list.size(), 4);
+        EXPECT_EQ(*it, 1);
+        EXPECT_EQ(*list.cbegin(), 1);
+        EXPECT_EQ(*(++list.cbegin()), 2);
+        EXPECT_EQ(*(++(++list.cbegin())), 3);
+        EXPECT_EQ(*(++(++(++list.cbegin()))), 4);
     }
 
     TEST(XORListTest, EmplaceBack)
     {
-        XORList<std::pair<int, int>> list;
-        list.emplace_back(1, 2);
-        list.emplace_back(3, 4);
+        XORList<int> list = {1, 2, 3};
 
-        EXPECT_EQ(list.size(), 2);
-        EXPECT_EQ(list.front(), std::make_pair(1, 2));
-        EXPECT_EQ(list.back(), std::make_pair(3, 4));
+        // Emplace an element at the back
+        auto it = list.emplace(list.cend(), 4);
+
+        EXPECT_EQ(list.size(), 4);
+        EXPECT_EQ(*it, 4);
+        EXPECT_EQ(*list.cbegin(), 1);
+        EXPECT_EQ(*(++list.cbegin()), 2);
+        EXPECT_EQ(*(++(++list.cbegin())), 3);
+        EXPECT_EQ(*(++(++(++list.cbegin()))), 4);
+    }
+
+    TEST(XORListTest, EmplaceBackMultipleArgs)
+    {
+        struct TestStruct
+        {
+            int a;
+            double b;
+            std::string c;
+
+            TestStruct(int x, double y, std::string z) : a(x), b(y), c(std::move(z)) {}
+        };
+
+        XORList<TestStruct> list;
+        auto &ref = list.emplace_back(1, 2.3, "test");
+
+        EXPECT_EQ(list.size(), 1);
+        EXPECT_EQ(ref.a, 1);
+        EXPECT_EQ(ref.b, 2.3);
+        EXPECT_EQ(ref.c, "test");
+    }
+
+    TEST(XORListTest, EmplaceFrontMultipleArgs)
+    {
+        struct TestStruct
+        {
+            int a;
+            double b;
+            std::string c;
+
+            TestStruct(int x, double y, std::string z) : a(x), b(y), c(std::move(z)) {}
+        };
+
+        XORList<TestStruct> list;
+        auto &ref = list.emplace_front(1, 2.3, "test");
+
+        EXPECT_EQ(list.size(), 1);
+        EXPECT_EQ(ref.a, 1);
+        EXPECT_EQ(ref.b, 2.3);
+        EXPECT_EQ(ref.c, "test");
     }
 
     TEST(XORListTest, Splice)
