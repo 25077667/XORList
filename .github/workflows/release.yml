@@ -1,4 +1,4 @@
-name: C/C++ CI
+name: C/C++ Major/Minor Release CI
 
 on:
   push:
@@ -77,9 +77,9 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GH_PAT }}
       with:
-        tag_name: "v${{ github.ref_name }}"
-        name: "Release v${{ github.ref_name }}"
-        body: "Release for commit number v${{ github.ref_name }}"
+        tag_name: "${{ github.ref_name }}"
+        name: "Release ${{ github.ref_name }}"
+        body: "Release for commit number ${{ github.ref_name }}"
         files: |
           release.zip
           release.tar.gz
