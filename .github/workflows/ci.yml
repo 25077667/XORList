@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main ]
     tags-ignore: 
-      - 'v*'  # Ignore all tag pushes
+      - 'v*'  # Ignore all tag version pushes
   pull_request:
     branches: [ main ]
   release:
