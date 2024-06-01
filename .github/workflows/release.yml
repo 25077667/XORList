@@ -6,7 +6,7 @@ on:
     tags:
       - 'v*.*.*'  # Trigger the workflow on version tags like v1.0.0
     tags-ignore:
-      - main # Excluding as it is a edge case for github actions tags 
+      - main # Excluding as it is a edge case for github actions tag
   pull_request:
     branches: [ main ]
   release:
