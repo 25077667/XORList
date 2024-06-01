@@ -9,6 +9,7 @@
 #include <type_traits>
 #include <limits>
 #include <algorithm>
+#include <initializer_list>
 
 namespace scc
 {
@@ -533,53 +534,48 @@ namespace scc
             m_size_ = 0;
         }
 
-        void insert(size_t position, const T &value) noexcept(canThrow == CanThrow::NoThrow)
+        iterator insert(const_iterator pos, const T &value) noexcept(canThrow == CanThrow::NoThrow)
         {
-            if (position > m_size_)
+            return emplace(pos, value);
+        }
+
+        iterator insert(const_iterator pos, T &&value) noexcept(canThrow == CanThrow::NoThrow)
+        {
+            return emplace(pos, std::move(value));
+        }
+
+        iterator insert(const_iterator pos, size_t count, const T &value) noexcept(canThrow == CanThrow::NoThrow)
+        {
+            if (count == 0)
+                return pos;
+
+            iterator it = pos;
+            for (size_t i = 0; i < count; ++i)
             {
-                if constexpr (canThrow == CanThrow::Throw)
-                {
-                    throw std::out_of_range("Position out of range");
-                }
-                else
-                {
-                    return; // No operation on out of range position
-                }
+                it = emplace(it, value);
+                ++it;
             }
+            return pos;
+        }
 
-            if (position == 0)
+        template <class InputIt, typename = std::_RequireInputIter<InputIt>>
+        iterator insert(const_iterator pos, InputIt first, InputIt last) noexcept(canThrow == CanThrow::NoThrow)
+        {
+            if (first == last)
+                return pos;
+
+            iterator it = pos;
+            for (InputIt i = first; i != last; ++i)
             {
-                push_front(value);
-                return;
+                it = emplace(it, *i);
+                ++it;
             }
-            if (position == m_size_)
-            {
-                push_back(value);
-                return;
-            }
+            return pos;
+        }
 
-            Node *newNode = allocate_node(value);
-            if (!newNode)
-            {
-                return; // No operation on allocation failure
-            }
-
-            Node *prev = nullptr;
-            Node *current = m_head_;
-            Node *next;
-
-            for (size_t i = 0; i < position; ++i)
-            {
-                next = XOR(prev, current->npx);
-                prev = current;
-                current = next;
-            }
-
-            newNode->npx = XOR(prev, current);
-            prev->npx = XOR(XOR(prev->npx, current), newNode);
-            current->npx = XOR(newNode, XOR(prev, current->npx));
-
-            ++m_size_;
+        iterator insert(const_iterator pos, std::initializer_list<T> ilist) noexcept(canThrow == CanThrow::NoThrow)
+        {
+            return insert(pos, ilist.begin(), ilist.end());
         }
 
         template <class... Args>

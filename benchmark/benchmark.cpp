@@ -79,7 +79,7 @@ BM_XORList_InsertBegin(benchmark::State &state)
         scc::XORList<int> list;
         for (int i = 0; i < ITERATION_COUNTS; ++i)
         {
-            list.insert(0, i);
+            list.insert(list.cbegin(), i);
         }
     }
 }
@@ -107,7 +107,7 @@ static void BM_XORList_EraseBegin(benchmark::State &state)
     {
         for (int i = 0; i < ITERATION_COUNTS; ++i)
         {
-            list.insert(0, i);
+            list.insert(list.cbegin(), i);
         }
         for (int i = 0; i < ITERATION_COUNTS; ++i)
         {

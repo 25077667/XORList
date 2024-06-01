@@ -58,7 +58,7 @@ namespace scc
         XORList<int> list;
         list.push_back(1);
         list.push_back(3);
-        list.insert(1, 2);
+        list.insert(++list.cbegin(), 2);
 
         EXPECT_EQ(list.size(), 3);
         EXPECT_EQ(list.front(), 1);
@@ -481,11 +481,12 @@ namespace scc
     {
         {
             XORList<int, CanThrow::NoThrow> list;
-            EXPECT_NO_THROW(list.insert(1, 1));
+            EXPECT_NO_THROW(list.insert(list.cbegin(), 1));
         }
         {
             XORList<int, CanThrow::Throw> list;
-            EXPECT_THROW(list.insert(-1, 1), std::out_of_range);
+            // it's hard to test this case, as the iterator is undefined
+            // we skip this test
         }
     }
 
@@ -810,7 +811,7 @@ namespace scc
         auto start = std::chrono::high_resolution_clock::now();
         for (int i = 0; i < num_elements; ++i)
         {
-            list.insert(0, i); // Inserting at the beginning
+            list.insert(list.cbegin(), i); // Inserting at the beginning
         }
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed_insert = end - start;
@@ -907,7 +908,7 @@ namespace scc
         list.push_back(1);
         list.push_back(2);
         auto it = list.begin();
-        list.insert(1, 3); // Inserting in the middle
+        list.insert(++list.cbegin(), 3); // Inserting in the middle
         // No exception should be thrown by default, but we can still check iterator behavior
         EXPECT_NE(it, list.end()); // Iterator should not point to end, but its behavior is undefined
     }
@@ -928,7 +929,7 @@ namespace scc
     TEST(XORListTest, InsertAtBeginOnEmptyList)
     {
         XORList<int> list;
-        list.insert(0, 1);
+        list.insert(list.cbegin(), 1);
 
         EXPECT_EQ(list.size(), 1);
         EXPECT_EQ(list.front(), 1);
@@ -937,7 +938,7 @@ namespace scc
     TEST(XORListTest, InsertAtEndOnEmptyList)
     {
         XORList<int> list;
-        list.insert(0, 1);
+        list.insert(list.cbegin(), 1);
 
         EXPECT_EQ(list.size(), 1);
         EXPECT_EQ(list.front(), 1);
@@ -948,7 +949,7 @@ namespace scc
         XORList<int> list;
         list.push_back(2);
         list.push_back(3);
-        list.insert(0, 1);
+        list.insert(list.cbegin(), 1);
 
         EXPECT_EQ(list.size(), 3);
         EXPECT_EQ(list.front(), 1);
@@ -960,7 +961,7 @@ namespace scc
         XORList<int> list;
         list.push_back(1);
         list.push_back(2);
-        list.insert(2, 3);
+        list.insert(++(++list.cbegin()), 3);
 
         EXPECT_EQ(list.size(), 3);
         EXPECT_EQ(list.front(), 1);
