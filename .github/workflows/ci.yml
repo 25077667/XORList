@@ -69,7 +69,7 @@ jobs:
         if [ "${{ env.latest_release }}" = "null" ]; then
           echo "new_version=0.1.0" >> $GITHUB_ENV
         else
-          IFS='.' read -r major minor patch <<< "${{ env.latest_release#v }}"
+          IFS='.' read -r major minor patch <<< "${{ env.latest_release }}"
           patch=$((patch + 1))
           new_version="$major.$minor.$patch"
           echo "new_version=$new_version" >> $GITHUB_ENV
