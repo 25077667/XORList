@@ -111,7 +111,7 @@ static void BM_XORList_EraseBegin(benchmark::State &state)
         }
         for (int i = 0; i < ITERATION_COUNTS; ++i)
         {
-            list.erase(0);
+            list.erase(list.cbegin());
         }
     }
 }

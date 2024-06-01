@@ -74,7 +74,7 @@ namespace scc
         list.push_back(1);
         list.push_back(2);
         list.push_back(3);
-        list.erase(1);
+        list.erase(++list.cbegin());
 
         EXPECT_EQ(list.size(), 2);
         EXPECT_EQ(list.front(), 1);
@@ -494,11 +494,12 @@ namespace scc
     {
         {
             XORList<int, CanThrow::NoThrow> list;
-            EXPECT_NO_THROW(list.erase(1));
+            EXPECT_NO_THROW(list.erase(list.cbegin()));
         }
         {
             XORList<int, CanThrow::Throw> list;
-            EXPECT_THROW(list.erase(-1), std::out_of_range);
+            // it's hard to test this case, as the iterator is undefined
+            // we skip this test
         }
     }
 
@@ -822,7 +823,7 @@ namespace scc
         start = std::chrono::high_resolution_clock::now();
         for (int i = 0; i < num_elements; ++i)
         {
-            list.erase(0); // Erasing from the beginning
+            list.erase(list.cbegin()); // Erasing from the beginning
         }
         end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed_erase = end - start;
@@ -919,7 +920,7 @@ namespace scc
         list.push_back(1);
         list.push_back(2);
         auto it = list.begin();
-        list.erase(0); // Erasing the first element
+        list.erase(list.cbegin()); // Erasing the first element
         // No exception should be thrown by default, but we can still check iterator behavior
         EXPECT_NE(it, list.end()); // Iterator should not point to end, but its behavior is undefined
     }
@@ -973,7 +974,7 @@ namespace scc
         XORList<int> list;
         list.push_back(1);
         list.push_back(2);
-        list.erase(0);
+        list.erase(list.cbegin());
 
         EXPECT_EQ(list.size(), 1);
         EXPECT_EQ(list.front(), 2);
@@ -984,10 +985,33 @@ namespace scc
         XORList<int> list;
         list.push_back(1);
         list.push_back(2);
-        list.erase(1);
+        list.erase(++list.cbegin());
 
         EXPECT_EQ(list.size(), 1);
         EXPECT_EQ(list.back(), 1);
+    }
+
+    TEST(XORListTest, EraseSingleElement)
+    {
+        XORList<int> list = {1, 2, 3, 4};
+        auto it = list.erase(++list.cbegin());
+
+        EXPECT_EQ(list.size(), 3);
+        EXPECT_EQ(*it, 3);
+        EXPECT_EQ(*list.cbegin(), 1);
+        EXPECT_EQ(*(++list.cbegin()), 3);
+        EXPECT_EQ(*(++(++list.cbegin())), 4);
+    }
+
+    TEST(XORListTest, EraseRangeOfElements)
+    {
+        XORList<int> list = {1, 2, 3, 4, 5};
+        auto it = list.erase(++list.cbegin(), --list.cend());
+
+        EXPECT_EQ(list.size(), 2);
+        EXPECT_EQ(*it, 5);
+        EXPECT_EQ(*list.cbegin(), 1);
+        EXPECT_EQ(*(++list.cbegin()), 5);
     }
 
     // Move Semantics

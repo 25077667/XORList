@@ -610,48 +610,86 @@ namespace scc
             return iterator(prev, newNode, this);
         }
 
-        void erase(size_t position) noexcept(canThrow == CanThrow::NoThrow)
+        iterator erase(const_iterator pos) noexcept(canThrow == CanThrow::NoThrow)
         {
-            if (position >= m_size_)
+            if (pos == cend())
             {
-                if constexpr (canThrow == CanThrow::Throw)
-                {
-                    throw std::out_of_range("Position out of range");
-                }
-                else
-                {
-                    return; // No operation on out of range position
-                }
+                return end();
             }
 
-            if (position == 0)
-            {
-                pop_front();
-                return;
-            }
-            if (position == m_size_ - 1)
-            {
-                pop_back();
-                return;
-            }
+            Node *prev = const_cast<Node *>(pos.prev_);
+            Node *current = const_cast<Node *>(pos.current_);
+            Node *next = XOR(prev, current->npx);
 
-            Node *prev = nullptr;
-            Node *current = m_head_;
-            Node *next;
-
-            for (size_t i = 0; i < position; ++i)
+            if (prev != nullptr)
             {
-                next = XOR(prev, current->npx);
-                prev = current;
-                current = next;
+                prev->npx = XOR(XOR(prev->npx, current), next);
+            }
+            else
+            {
+                m_head_ = next;
             }
 
-            Node *next_next = XOR(prev, current->npx);
-            prev->npx = XOR(XOR(prev->npx, current), next_next);
-            next_next->npx = XOR(prev, XOR(current, next_next->npx));
+            if (next != nullptr)
+            {
+                next->npx = XOR(prev, XOR(current, next->npx));
+            }
+            else
+            {
+                m_tail_ = prev;
+            }
 
             deallocate_node(current);
             --m_size_;
+
+            return iterator(prev, next, this);
+        }
+
+        iterator erase(const_iterator first, const_iterator last) noexcept(canThrow == CanThrow::NoThrow)
+        {
+            if (first == last)
+            {
+                //  If [first, last) is an empty range, then last is returned.
+                return iterator(const_cast<Node *>(last.prev_), const_cast<Node *>(last.current_), this);
+            }
+
+            Node *first_prev = const_cast<Node *>(first.prev_);
+            Node *last_current = const_cast<Node *>(last.current_);
+            Node *last_next = XOR(last_current->npx, const_cast<Node *>(last.prev_));
+            Node *current = const_cast<Node *>(first.current_);
+            Node *current_prev = first_prev;
+            Node *current_backup = current;
+
+            while (current != last_current)
+            {
+                Node *next = XOR(current_prev, current->npx);
+                current_prev = current;
+                deallocate_node(current);
+                current = next;
+                --m_size_;
+            }
+
+            if (first_prev != nullptr)
+            {
+                first_prev->npx = XOR(XOR(first_prev->npx, current_backup), last_current);
+            }
+            else
+            {
+                last_current->npx = XOR(first_prev, last_next);
+                m_head_ = last_current;
+            }
+
+            if (last_current != nullptr)
+            {
+                last_current->npx = XOR(first_prev, XOR(const_cast<Node *>(last.prev_), last_current->npx));
+            }
+            else
+            {
+                first_prev->npx = XOR(XOR(first_prev->npx, current_backup), last_current);
+                m_tail_ = first_prev;
+            }
+
+            return iterator(first_prev, last_current, this);
         }
 
         void push_back(const T &value) noexcept(canThrow == CanThrow::NoThrow)
