@@ -252,6 +252,70 @@ namespace scc
             return Allocator(alloc_);
         }
 
+        T &front() noexcept(canThrow == CanThrow::NoThrow)
+        {
+            if (empty())
+            {
+                if constexpr (canThrow == CanThrow::Throw)
+                {
+                    throw std::runtime_error("List is empty");
+                }
+                else
+                {
+                    return m_tail_->data; // undefined behavior
+                }
+            }
+            return m_head_->data;
+        }
+
+        const T &front() const noexcept(canThrow == CanThrow::NoThrow)
+        {
+            if (empty())
+            {
+                if constexpr (canThrow == CanThrow::Throw)
+                {
+                    throw std::runtime_error("List is empty");
+                }
+                else
+                {
+                    return m_tail_->data; // undefined behavior
+                }
+            }
+            return m_head_->data;
+        }
+
+        T &back() noexcept(canThrow == CanThrow::NoThrow)
+        {
+            if (empty())
+            {
+                if constexpr (canThrow == CanThrow::Throw)
+                {
+                    throw std::runtime_error("List is empty");
+                }
+                else
+                {
+                    return m_tail_->data; // undefined behavior
+                }
+            }
+            return m_tail_->data;
+        }
+
+        const T &back() const noexcept(canThrow == CanThrow::NoThrow)
+        {
+            if (empty())
+            {
+                if constexpr (canThrow == CanThrow::Throw)
+                {
+                    throw std::runtime_error("List is empty");
+                }
+                else
+                {
+                    return m_tail_->data; // undefined behavior
+                }
+            }
+            return m_tail_->data;
+        }
+
         template <bool IsConst>
         class XORListIterator
         {
@@ -429,9 +493,91 @@ namespace scc
             return const_iterator(m_head_, nullptr, this);
         }
 
+        bool empty() const noexcept
+        {
+            return m_size_ == 0;
+        }
+
+        size_t size() const noexcept
+        {
+            return m_size_;
+        }
+
         size_t max_size() const noexcept
         {
             return std::numeric_limits<size_t>::max();
+        }
+
+        void clear() noexcept
+        {
+            if (empty())
+            {
+                return;
+            }
+
+            Node *current = m_head_;
+            Node *prev = nullptr;
+            Node *next;
+
+            while (current != nullptr)
+            {
+                next = XOR(prev, current->npx);
+                deallocate_node(current);
+                prev = current;
+                current = next;
+            }
+
+            m_head_ = m_tail_ = nullptr;
+            m_size_ = 0;
+        }
+
+        void insert(size_t position, const T &value) noexcept(canThrow == CanThrow::NoThrow)
+        {
+            if (position > m_size_)
+            {
+                if constexpr (canThrow == CanThrow::Throw)
+                {
+                    throw std::out_of_range("Position out of range");
+                }
+                else
+                {
+                    return; // No operation on out of range position
+                }
+            }
+
+            if (position == 0)
+            {
+                push_front(value);
+                return;
+            }
+            if (position == m_size_)
+            {
+                push_back(value);
+                return;
+            }
+
+            Node *newNode = allocate_node(value);
+            if (!newNode)
+            {
+                return; // No operation on allocation failure
+            }
+
+            Node *prev = nullptr;
+            Node *current = m_head_;
+            Node *next;
+
+            for (size_t i = 0; i < position; ++i)
+            {
+                next = XOR(prev, current->npx);
+                prev = current;
+                current = next;
+            }
+
+            newNode->npx = XOR(prev, current);
+            prev->npx = XOR(XOR(prev->npx, current), newNode);
+            current->npx = XOR(newNode, XOR(prev, current->npx));
+
+            ++m_size_;
         }
 
         template <typename... Args>
@@ -461,344 +607,6 @@ namespace scc
             }
 
             Node *newNode = allocate_node(T(std::forward<Args>(args)...));
-            if (!newNode)
-            {
-                return; // No operation on allocation failure
-            }
-
-            Node *prev = nullptr;
-            Node *current = m_head_;
-            Node *next;
-
-            for (size_t i = 0; i < position; ++i)
-            {
-                next = XOR(prev, current->npx);
-                prev = current;
-                current = next;
-            }
-
-            newNode->npx = XOR(prev, current);
-            prev->npx = XOR(XOR(prev->npx, current), newNode);
-            current->npx = XOR(newNode, XOR(prev, current->npx));
-
-            ++m_size_;
-        }
-
-        template <typename... Args>
-        void emplace_back(Args &&...args) noexcept(canThrow == CanThrow::NoThrow)
-        {
-            Node *newNode = allocate_node(T(std::forward<Args>(args)...));
-            if (!newNode)
-            {
-                return; // No operation on allocation failure
-            }
-
-            newNode->npx = m_tail_;
-
-            if (m_tail_ != nullptr)
-            {
-                m_tail_->npx = XOR(newNode, m_tail_->npx);
-            }
-            else
-            {
-                m_head_ = newNode;
-            }
-
-            m_tail_ = newNode;
-            ++m_size_;
-        }
-
-        template <typename... Args>
-        void emplace_front(Args &&...args) noexcept(canThrow == CanThrow::NoThrow)
-        {
-            Node *newNode = allocate_node(T(std::forward<Args>(args)...));
-            if (!newNode)
-            {
-                return; // No operation on allocation failure
-            }
-
-            newNode->npx = m_head_;
-
-            if (m_head_ != nullptr)
-            {
-                m_head_->npx = XOR(newNode, m_head_->npx);
-            }
-            else
-            {
-                m_tail_ = newNode;
-            }
-
-            m_head_ = newNode;
-            ++m_size_;
-        }
-
-        void resize(size_t count, const T &value = T()) noexcept(canThrow == CanThrow::NoThrow)
-        {
-            if (count < m_size_)
-            {
-                while (m_size_ > count)
-                {
-                    pop_back();
-                }
-            }
-            else if (count > m_size_)
-            {
-                while (m_size_ < count)
-                {
-                    push_back(value);
-                }
-            }
-        }
-
-        void unique() noexcept(canThrow == CanThrow::NoThrow)
-        {
-            if (m_size_ < 2)
-            {
-                return;
-            }
-
-            Node *prev = nullptr;
-            Node *current = m_head_;
-            Node *next = XOR(prev, current->npx);
-
-            while (next != nullptr)
-            {
-                if (current->data == next->data)
-                {
-                    Node *next_next = XOR(current, next->npx);
-                    current->npx = XOR(prev, next_next);
-
-                    if (next_next != nullptr)
-                    {
-                        next_next->npx = XOR(current, XOR(next, next_next->npx));
-                    }
-                    else
-                    {
-                        m_tail_ = current;
-                    }
-
-                    deallocate_node(next);
-                    next = next_next;
-                    --m_size_;
-                }
-                else
-                {
-                    prev = current;
-                    current = next;
-                    next = XOR(prev, current->npx);
-                }
-            }
-        }
-
-        void sort() noexcept(canThrow == CanThrow::NoThrow)
-        {
-            if (m_size_ < 2)
-            {
-                return;
-            }
-
-            std::sort(begin(), end());
-        }
-
-        void clear() noexcept
-        {
-            if (empty())
-            {
-                return;
-            }
-
-            Node *current = m_head_;
-            Node *prev = nullptr;
-            Node *next;
-
-            while (current != nullptr)
-            {
-                next = XOR(prev, current->npx);
-                deallocate_node(current);
-                prev = current;
-                current = next;
-            }
-
-            m_head_ = m_tail_ = nullptr;
-            m_size_ = 0;
-        }
-
-        void push_front(const T &value) noexcept(canThrow == CanThrow::NoThrow)
-        {
-            Node *newNode = allocate_node(value);
-            if (!newNode)
-            {
-                return; // No operation on allocation failure
-            }
-
-            newNode->npx = m_head_;
-
-            if (m_head_ != nullptr)
-            {
-                m_head_->npx = XOR(newNode, m_head_->npx);
-            }
-            else
-            {
-                m_tail_ = newNode;
-            }
-
-            m_head_ = newNode;
-            ++m_size_;
-        }
-
-        void push_back(const T &value) noexcept(canThrow == CanThrow::NoThrow)
-        {
-            Node *newNode = allocate_node(value);
-            if (!newNode)
-            {
-                return; // No operation on allocation failure
-            }
-
-            newNode->npx = m_tail_;
-
-            if (m_tail_ != nullptr)
-            {
-                m_tail_->npx = XOR(newNode, m_tail_->npx);
-            }
-            else
-            {
-                m_head_ = newNode;
-            }
-
-            m_tail_ = newNode;
-            ++m_size_;
-        }
-
-        bool empty() const noexcept
-        {
-            return m_size_ == 0;
-        }
-
-        size_t size() const noexcept
-        {
-            return m_size_;
-        }
-
-        T &front() noexcept(canThrow == CanThrow::NoThrow)
-        {
-            if (empty())
-            {
-                if constexpr (canThrow == CanThrow::Throw)
-                {
-                    throw std::runtime_error("List is empty");
-                }
-                else
-                {
-                    return m_tail_->data; // undefined behavior
-                }
-            }
-            return m_head_->data;
-        }
-
-        T &back() noexcept(canThrow == CanThrow::NoThrow)
-        {
-            if (empty())
-            {
-                if constexpr (canThrow == CanThrow::Throw)
-                {
-                    throw std::runtime_error("List is empty");
-                }
-                else
-                {
-                    return m_tail_->data; // undefined behavior
-                }
-            }
-            return m_tail_->data;
-        }
-
-        void pop_front() noexcept(canThrow == CanThrow::NoThrow)
-        {
-            if (empty())
-            {
-                if constexpr (canThrow == CanThrow::Throw)
-                {
-                    throw std::runtime_error("List is empty");
-                }
-                else
-                {
-                    return; // No operation on empty list
-                }
-            }
-
-            Node *temp = m_head_;
-            Node *next = XOR(nullptr, m_head_->npx);
-
-            if (next != nullptr)
-            {
-                next->npx = XOR(temp, next->npx);
-            }
-            else
-            {
-                m_tail_ = nullptr;
-            }
-
-            m_head_ = next;
-            deallocate_node(temp);
-            --m_size_;
-        }
-
-        void pop_back() noexcept(canThrow == CanThrow::NoThrow)
-        {
-            if (empty())
-            {
-                if constexpr (canThrow == CanThrow::Throw)
-                {
-                    throw std::runtime_error("List is empty");
-                }
-                else
-                {
-                    return; // No operation on empty list
-                }
-            }
-
-            Node *temp = m_tail_;
-            Node *prev = XOR(nullptr, m_tail_->npx);
-
-            if (prev != nullptr)
-            {
-                prev->npx = XOR(temp, prev->npx);
-            }
-            else
-            {
-                m_head_ = nullptr;
-            }
-
-            m_tail_ = prev;
-            deallocate_node(temp);
-            --m_size_;
-        }
-
-        void insert(size_t position, const T &value) noexcept(canThrow == CanThrow::NoThrow)
-        {
-            if (position > m_size_)
-            {
-                if constexpr (canThrow == CanThrow::Throw)
-                {
-                    throw std::out_of_range("Position out of range");
-                }
-                else
-                {
-                    return; // No operation on out of range position
-                }
-            }
-
-            if (position == 0)
-            {
-                push_front(value);
-                return;
-            }
-            if (position == m_size_)
-            {
-                push_back(value);
-                return;
-            }
-
-            Node *newNode = allocate_node(value);
             if (!newNode)
             {
                 return; // No operation on allocation failure
@@ -864,6 +672,207 @@ namespace scc
 
             deallocate_node(current);
             --m_size_;
+        }
+
+        void push_back(const T &value) noexcept(canThrow == CanThrow::NoThrow)
+        {
+            Node *newNode = allocate_node(value);
+            if (!newNode)
+            {
+                return; // No operation on allocation failure
+            }
+
+            newNode->npx = m_tail_;
+
+            if (m_tail_ != nullptr)
+            {
+                m_tail_->npx = XOR(newNode, m_tail_->npx);
+            }
+            else
+            {
+                m_head_ = newNode;
+            }
+
+            m_tail_ = newNode;
+            ++m_size_;
+        }
+
+        template <typename... Args>
+        void emplace_back(Args &&...args) noexcept(canThrow == CanThrow::NoThrow)
+        {
+            Node *newNode = allocate_node(T(std::forward<Args>(args)...));
+            if (!newNode)
+            {
+                return; // No operation on allocation failure
+            }
+
+            newNode->npx = m_tail_;
+
+            if (m_tail_ != nullptr)
+            {
+                m_tail_->npx = XOR(newNode, m_tail_->npx);
+            }
+            else
+            {
+                m_head_ = newNode;
+            }
+
+            m_tail_ = newNode;
+            ++m_size_;
+        }
+
+        void pop_back() noexcept(canThrow == CanThrow::NoThrow)
+        {
+            if (empty())
+            {
+                if constexpr (canThrow == CanThrow::Throw)
+                {
+                    throw std::runtime_error("List is empty");
+                }
+                else
+                {
+                    return; // No operation on empty list
+                }
+            }
+
+            Node *temp = m_tail_;
+            Node *prev = XOR(nullptr, m_tail_->npx);
+
+            if (prev != nullptr)
+            {
+                prev->npx = XOR(temp, prev->npx);
+            }
+            else
+            {
+                m_head_ = nullptr;
+            }
+
+            m_tail_ = prev;
+            deallocate_node(temp);
+            --m_size_;
+        }
+
+        void push_front(const T &value) noexcept(canThrow == CanThrow::NoThrow)
+        {
+            Node *newNode = allocate_node(value);
+            if (!newNode)
+            {
+                return; // No operation on allocation failure
+            }
+
+            newNode->npx = m_head_;
+
+            if (m_head_ != nullptr)
+            {
+                m_head_->npx = XOR(newNode, m_head_->npx);
+            }
+            else
+            {
+                m_tail_ = newNode;
+            }
+
+            m_head_ = newNode;
+            ++m_size_;
+        }
+
+        template <typename... Args>
+        void emplace_front(Args &&...args) noexcept(canThrow == CanThrow::NoThrow)
+        {
+            Node *newNode = allocate_node(T(std::forward<Args>(args)...));
+            if (!newNode)
+            {
+                return; // No operation on allocation failure
+            }
+
+            newNode->npx = m_head_;
+
+            if (m_head_ != nullptr)
+            {
+                m_head_->npx = XOR(newNode, m_head_->npx);
+            }
+            else
+            {
+                m_tail_ = newNode;
+            }
+
+            m_head_ = newNode;
+            ++m_size_;
+        }
+
+        void pop_front() noexcept(canThrow == CanThrow::NoThrow)
+        {
+            if (empty())
+            {
+                if constexpr (canThrow == CanThrow::Throw)
+                {
+                    throw std::runtime_error("List is empty");
+                }
+                else
+                {
+                    return; // No operation on empty list
+                }
+            }
+
+            Node *temp = m_head_;
+            Node *next = XOR(nullptr, m_head_->npx);
+
+            if (next != nullptr)
+            {
+                next->npx = XOR(temp, next->npx);
+            }
+            else
+            {
+                m_tail_ = nullptr;
+            }
+
+            m_head_ = next;
+            deallocate_node(temp);
+            --m_size_;
+        }
+
+        void resize(size_t count, const T &value = T()) noexcept(canThrow == CanThrow::NoThrow)
+        {
+            if (count < m_size_)
+            {
+                while (m_size_ > count)
+                {
+                    pop_back();
+                }
+            }
+            else if (count > m_size_)
+            {
+                while (m_size_ < count)
+                {
+                    push_back(value);
+                }
+            }
+        }
+
+        void merge(XORList<T> &other_list) noexcept
+        {
+            if (other_list.empty())
+            {
+                return;
+            }
+
+            if (empty())
+            {
+                m_head_ = other_list.m_head_;
+                m_tail_ = other_list.m_tail_;
+                m_size_ = other_list.m_size_;
+                other_list.m_head_ = other_list.m_tail_ = nullptr;
+                other_list.m_size_ = 0;
+                return;
+            }
+
+            m_tail_->npx = XOR(XOR(m_tail_->npx, nullptr), other_list.m_head_);
+            other_list.m_head_->npx = XOR(m_tail_, other_list.m_head_->npx);
+
+            m_tail_ = other_list.m_tail_;
+            m_size_ += other_list.m_size_;
+
+            other_list.m_head_ = other_list.m_tail_ = nullptr;
+            other_list.m_size_ = 0;
         }
 
         void splice(size_t position, XORList<T> &other_list) noexcept(canThrow == CanThrow::NoThrow)
@@ -932,38 +941,61 @@ namespace scc
             other_list.m_size_ = 0;
         }
 
-        void merge(XORList<T> &other_list) noexcept
-        {
-            if (other_list.empty())
-            {
-                return;
-            }
-
-            if (empty())
-            {
-                m_head_ = other_list.m_head_;
-                m_tail_ = other_list.m_tail_;
-                m_size_ = other_list.m_size_;
-                other_list.m_head_ = other_list.m_tail_ = nullptr;
-                other_list.m_size_ = 0;
-                return;
-            }
-
-            m_tail_->npx = XOR(XOR(m_tail_->npx, nullptr), other_list.m_head_);
-            other_list.m_head_->npx = XOR(m_tail_, other_list.m_head_->npx);
-
-            m_tail_ = other_list.m_tail_;
-            m_size_ += other_list.m_size_;
-
-            other_list.m_head_ = other_list.m_tail_ = nullptr;
-            other_list.m_size_ = 0;
-        }
-
         void reverse() noexcept
         {
             Node *temp = m_head_;
             m_head_ = m_tail_;
             m_tail_ = temp;
+        }
+
+        void unique() noexcept(canThrow == CanThrow::NoThrow)
+        {
+            if (m_size_ < 2)
+            {
+                return;
+            }
+
+            Node *prev = nullptr;
+            Node *current = m_head_;
+            Node *next = XOR(prev, current->npx);
+
+            while (next != nullptr)
+            {
+                if (current->data == next->data)
+                {
+                    Node *next_next = XOR(current, next->npx);
+                    current->npx = XOR(prev, next_next);
+
+                    if (next_next != nullptr)
+                    {
+                        next_next->npx = XOR(current, XOR(next, next_next->npx));
+                    }
+                    else
+                    {
+                        m_tail_ = current;
+                    }
+
+                    deallocate_node(next);
+                    next = next_next;
+                    --m_size_;
+                }
+                else
+                {
+                    prev = current;
+                    current = next;
+                    next = XOR(prev, current->npx);
+                }
+            }
+        }
+
+        void sort() noexcept(canThrow == CanThrow::NoThrow)
+        {
+            if (m_size_ < 2)
+            {
+                return;
+            }
+
+            std::sort(begin(), end());
         }
     };
 }
