@@ -458,6 +458,26 @@ namespace scc
         EXPECT_EQ(list.size(), 3);
     }
 
+    TEST(XORListTest, InitializerListAssignmentOperator)
+    {
+        XORList<int> list;
+        list.push_back(0); // Initially populate the list
+
+        list = {1, 2, 3, 4, 5};
+
+        EXPECT_EQ(list.size(), 5);
+        EXPECT_EQ(list.front(), 1);
+        EXPECT_EQ(list.back(), 5);
+
+        // Ensure the list contains the expected elements
+        auto it = list.begin();
+        EXPECT_EQ(*it++, 1);
+        EXPECT_EQ(*it++, 2);
+        EXPECT_EQ(*it++, 3);
+        EXPECT_EQ(*it++, 4);
+        EXPECT_EQ(*it++, 5);
+    }
+
     TEST(XORListTest, Assign)
     {
         XORList<int> list;

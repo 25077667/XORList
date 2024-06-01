@@ -167,11 +167,54 @@ namespace scc
             if (this != &other)
             {
                 clear();
+                if constexpr (std::allocator_traits<NodeAllocator>::propagate_on_container_copy_assignment::value)
+                {
+                    alloc_ = other.alloc_;
+                }
                 for (Node *current = other.m_head_, *prev = nullptr, *next; current != nullptr; prev = current, current = next)
                 {
                     next = XOR(prev, current->npx);
                     push_back(current->data);
                 }
+            }
+            return *this;
+        }
+
+        XORList &operator=(XORList &&other) noexcept(canThrow == CanThrow::NoThrow)
+        {
+            if (this != &other)
+            {
+                clear();
+                if constexpr (std::allocator_traits<NodeAllocator>::propagate_on_container_move_assignment::value)
+                {
+                    alloc_ = std::move(other.alloc_);
+                }
+                else if (alloc_ != other.alloc_)
+                {
+                    for (Node *current = other.m_head_, *prev = nullptr, *next; current != nullptr; prev = current, current = next)
+                    {
+                        next = XOR(prev, current->npx);
+                        push_back(std::move(current->data));
+                    }
+                    other.clear();
+                    return *this;
+                }
+                m_head_ = other.m_head_;
+                m_tail_ = other.m_tail_;
+                m_size_ = other.m_size_;
+
+                other.m_head_ = other.m_tail_ = nullptr;
+                other.m_size_ = 0;
+            }
+            return *this;
+        }
+
+        XORList &operator=(std::initializer_list<T> ilist) noexcept(canThrow == CanThrow::NoThrow)
+        {
+            clear();
+            for (const T &value : ilist)
+            {
+                push_back(value);
             }
             return *this;
         }
