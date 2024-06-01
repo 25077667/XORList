@@ -6,7 +6,8 @@ on:
   pull_request:
     branches: [ main ]
   release:
-    types: [created]
+    types: [ push ]
+    branches: [ main ]
 
 jobs:
   build:
