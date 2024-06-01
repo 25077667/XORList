@@ -715,6 +715,29 @@ namespace scc
             ++m_size_;
         }
 
+        void push_back(T &&value) noexcept(canThrow == CanThrow::NoThrow)
+        {
+            Node *newNode = allocate_node(std::forward<T>(value));
+            if (!newNode)
+            {
+                return; // No operation on allocation failure
+            }
+
+            newNode->npx = m_tail_;
+
+            if (m_tail_ != nullptr)
+            {
+                m_tail_->npx = XOR(newNode, m_tail_->npx);
+            }
+            else
+            {
+                m_head_ = newNode;
+            }
+
+            m_tail_ = newNode;
+            ++m_size_;
+        }
+
         template <class... Args>
         T &emplace_back(Args &&...args) noexcept(canThrow == CanThrow::NoThrow)
         {
@@ -774,6 +797,29 @@ namespace scc
         void push_front(const T &value) noexcept(canThrow == CanThrow::NoThrow)
         {
             Node *newNode = allocate_node(value);
+            if (!newNode)
+            {
+                return; // No operation on allocation failure
+            }
+
+            newNode->npx = m_head_;
+
+            if (m_head_ != nullptr)
+            {
+                m_head_->npx = XOR(newNode, m_head_->npx);
+            }
+            else
+            {
+                m_tail_ = newNode;
+            }
+
+            m_head_ = newNode;
+            ++m_size_;
+        }
+
+        void push_front(T &&value) noexcept(canThrow == CanThrow::NoThrow)
+        {
+            Node *newNode = allocate_node(std::forward<T>(value));
             if (!newNode)
             {
                 return; // No operation on allocation failure
