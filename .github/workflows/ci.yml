@@ -54,11 +54,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    # - name: Get commit count
-    #   id: get_commit_count
-    #   run: |
-    #     COMMIT_COUNT=$(git rev-list --count HEAD)
-    #     echo "commit_count=$COMMIT_COUNT" >> $GITHUB_OUTPUT
     - name: Get latest release
       id: get_latest_release
       run: |
