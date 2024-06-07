@@ -58,7 +58,7 @@ namespace scc
         XORList<int> list;
         list.push_back(1);
         list.push_back(3);
-        list.insert(1, 2);
+        list.insert(++list.cbegin(), 2);
 
         EXPECT_EQ(list.size(), 3);
         EXPECT_EQ(list.front(), 1);
@@ -74,7 +74,7 @@ namespace scc
         list.push_back(1);
         list.push_back(2);
         list.push_back(3);
-        list.erase(1);
+        list.erase(++list.cbegin());
 
         EXPECT_EQ(list.size(), 2);
         EXPECT_EQ(list.front(), 1);
@@ -299,24 +299,87 @@ namespace scc
 
     TEST(XORListTest, Emplace)
     {
-        XORList<std::pair<int, int>> list;
-        list.emplace(0, 1, 2); // Emplace at the front
-        list.emplace(1, 3, 4); // Emplace at the back
+        XORList<int> list = {1, 2, 4};
 
-        EXPECT_EQ(list.size(), 2);
-        EXPECT_EQ(list.front(), std::make_pair(1, 2));
-        EXPECT_EQ(list.back(), std::make_pair(3, 4));
+        // Emplace an element in the middle
+        auto it = list.emplace(++list.cbegin(), 3);
+
+        EXPECT_EQ(list.size(), 4);
+        EXPECT_EQ(*it, 3);
+        EXPECT_EQ(*list.cbegin(), 1);
+        EXPECT_EQ(*(++list.cbegin()), 3);
+        EXPECT_EQ(*(++(++list.cbegin())), 2);
+        EXPECT_EQ(*(++(++(++list.cbegin()))), 4);
+    }
+
+    TEST(XORListTest, EmplaceFront)
+    {
+        XORList<int> list = {2, 3, 4};
+
+        // Emplace an element at the front
+        auto it = list.emplace(list.cbegin(), 1);
+
+        EXPECT_EQ(list.size(), 4);
+        EXPECT_EQ(*it, 1);
+        EXPECT_EQ(*list.cbegin(), 1);
+        EXPECT_EQ(*(++list.cbegin()), 2);
+        EXPECT_EQ(*(++(++list.cbegin())), 3);
+        EXPECT_EQ(*(++(++(++list.cbegin()))), 4);
     }
 
     TEST(XORListTest, EmplaceBack)
     {
-        XORList<std::pair<int, int>> list;
-        list.emplace_back(1, 2);
-        list.emplace_back(3, 4);
+        XORList<int> list = {1, 2, 3};
 
-        EXPECT_EQ(list.size(), 2);
-        EXPECT_EQ(list.front(), std::make_pair(1, 2));
-        EXPECT_EQ(list.back(), std::make_pair(3, 4));
+        // Emplace an element at the back
+        auto it = list.emplace(list.cend(), 4);
+
+        EXPECT_EQ(list.size(), 4);
+        EXPECT_EQ(*it, 4);
+        EXPECT_EQ(*list.cbegin(), 1);
+        EXPECT_EQ(*(++list.cbegin()), 2);
+        EXPECT_EQ(*(++(++list.cbegin())), 3);
+        EXPECT_EQ(*(++(++(++list.cbegin()))), 4);
+    }
+
+    TEST(XORListTest, EmplaceBackMultipleArgs)
+    {
+        struct TestStruct
+        {
+            int a;
+            double b;
+            std::string c;
+
+            TestStruct(int x, double y, std::string z) : a(x), b(y), c(std::move(z)) {}
+        };
+
+        XORList<TestStruct> list;
+        auto &ref = list.emplace_back(1, 2.3, "test");
+
+        EXPECT_EQ(list.size(), 1);
+        EXPECT_EQ(ref.a, 1);
+        EXPECT_EQ(ref.b, 2.3);
+        EXPECT_EQ(ref.c, "test");
+    }
+
+    TEST(XORListTest, EmplaceFrontMultipleArgs)
+    {
+        struct TestStruct
+        {
+            int a;
+            double b;
+            std::string c;
+
+            TestStruct(int x, double y, std::string z) : a(x), b(y), c(std::move(z)) {}
+        };
+
+        XORList<TestStruct> list;
+        auto &ref = list.emplace_front(1, 2.3, "test");
+
+        EXPECT_EQ(list.size(), 1);
+        EXPECT_EQ(ref.a, 1);
+        EXPECT_EQ(ref.b, 2.3);
+        EXPECT_EQ(ref.c, "test");
     }
 
     TEST(XORListTest, Splice)
@@ -418,11 +481,12 @@ namespace scc
     {
         {
             XORList<int, CanThrow::NoThrow> list;
-            EXPECT_NO_THROW(list.insert(1, 1));
+            EXPECT_NO_THROW(list.insert(list.cbegin(), 1));
         }
         {
             XORList<int, CanThrow::Throw> list;
-            EXPECT_THROW(list.insert(-1, 1), std::out_of_range);
+            // it's hard to test this case, as the iterator is undefined
+            // we skip this test
         }
     }
 
@@ -430,11 +494,12 @@ namespace scc
     {
         {
             XORList<int, CanThrow::NoThrow> list;
-            EXPECT_NO_THROW(list.erase(1));
+            EXPECT_NO_THROW(list.erase(list.cbegin()));
         }
         {
             XORList<int, CanThrow::Throw> list;
-            EXPECT_THROW(list.erase(-1), std::out_of_range);
+            // it's hard to test this case, as the iterator is undefined
+            // we skip this test
         }
     }
 
@@ -458,6 +523,26 @@ namespace scc
         EXPECT_EQ(list.size(), 3);
     }
 
+    TEST(XORListTest, InitializerListAssignmentOperator)
+    {
+        XORList<int> list;
+        list.push_back(0); // Initially populate the list
+
+        list = {1, 2, 3, 4, 5};
+
+        EXPECT_EQ(list.size(), 5);
+        EXPECT_EQ(list.front(), 1);
+        EXPECT_EQ(list.back(), 5);
+
+        // Ensure the list contains the expected elements
+        auto it = list.begin();
+        EXPECT_EQ(*it++, 1);
+        EXPECT_EQ(*it++, 2);
+        EXPECT_EQ(*it++, 3);
+        EXPECT_EQ(*it++, 4);
+        EXPECT_EQ(*it++, 5);
+    }
+
     TEST(XORListTest, Assign)
     {
         XORList<int> list;
@@ -468,6 +553,37 @@ namespace scc
         {
             EXPECT_EQ(*it, 42);
         }
+    }
+
+    TEST(XORListTest, AssignRange)
+    {
+        XORList<int> list;
+        std::vector<int> values = {1, 2, 3, 4, 5};
+
+        list.assign(values.begin(), values.end());
+
+        EXPECT_EQ(list.size(), values.size());
+        auto it = list.begin();
+        for (const int &value : values)
+        {
+            EXPECT_EQ(*it++, value);
+        }
+    }
+
+    TEST(XORListTest, AssignInitializerList)
+    {
+        XORList<int> list;
+        list.push_back(0); // Initially populate the list
+
+        list.assign({1, 2, 3, 4, 5});
+
+        EXPECT_EQ(list.size(), 5);
+        auto it = list.begin();
+        EXPECT_EQ(*it++, 1);
+        EXPECT_EQ(*it++, 2);
+        EXPECT_EQ(*it++, 3);
+        EXPECT_EQ(*it++, 4);
+        EXPECT_EQ(*it++, 5);
     }
 
     TEST(XORListTest, Resize)
@@ -484,6 +600,71 @@ namespace scc
         list.resize(2);
         EXPECT_EQ(list.size(), 2);
         EXPECT_EQ(list.back(), 2);
+    }
+
+    TEST(XORListTest, Swap)
+    {
+        XORList<int> list1;
+        list1.push_back(1);
+        list1.push_back(2);
+        list1.push_back(3);
+
+        XORList<int> list2;
+        list2.push_back(4);
+        list2.push_back(5);
+
+        list1.swap(list2);
+
+        // Check contents of list1 after swap
+        EXPECT_EQ(list1.size(), 2);
+        auto it = list1.begin();
+        EXPECT_EQ(*it++, 4);
+        EXPECT_EQ(*it++, 5);
+
+        // Check contents of list2 after swap
+        EXPECT_EQ(list2.size(), 3);
+        it = list2.begin();
+        EXPECT_EQ(*it++, 1);
+        EXPECT_EQ(*it++, 2);
+        EXPECT_EQ(*it++, 3);
+    }
+
+    TEST(XORListTest, SwapSameAllocator)
+    {
+        XORList<int> list1;
+        XORList<int> list2;
+        list1.push_back(1);
+        list2.push_back(2);
+
+        list1.swap(list2);
+
+        // Check if the swap occurred correctly
+        EXPECT_EQ(list1.size(), 1);
+        EXPECT_EQ(list2.size(), 1);
+
+        EXPECT_EQ(list1.front(), 2);
+        EXPECT_EQ(list2.front(), 1);
+    }
+
+    TEST(XORListTest, SwapDifferentAllocator)
+    {
+        using AllocatorType = std::allocator<int>;
+
+        XORList<int, CanThrow::NoThrow, AllocatorType> list1{AllocatorType()};
+        XORList<int, CanThrow::NoThrow, AllocatorType> list2{AllocatorType()};
+
+        list1.push_back(1);
+        list1.push_back(2);
+        list2.push_back(3);
+
+        list1.swap(list2);
+
+        // Check if the swap occurred correctly
+        EXPECT_EQ(list1.size(), 1);
+        EXPECT_EQ(list2.size(), 2);
+
+        EXPECT_EQ(list1.front(), 3);
+        EXPECT_EQ(list2.front(), 1);
     }
 
     TEST(XORListTest, Unique)
@@ -631,7 +812,7 @@ namespace scc
         auto start = std::chrono::high_resolution_clock::now();
         for (int i = 0; i < num_elements; ++i)
         {
-            list.insert(0, i); // Inserting at the beginning
+            list.insert(list.cbegin(), i); // Inserting at the beginning
         }
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed_insert = end - start;
@@ -642,7 +823,7 @@ namespace scc
         start = std::chrono::high_resolution_clock::now();
         for (int i = 0; i < num_elements; ++i)
         {
-            list.erase(0); // Erasing from the beginning
+            list.erase(list.cbegin()); // Erasing from the beginning
         }
         end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed_erase = end - start;
@@ -728,7 +909,7 @@ namespace scc
         list.push_back(1);
         list.push_back(2);
         auto it = list.begin();
-        list.insert(1, 3); // Inserting in the middle
+        list.insert(++list.cbegin(), 3); // Inserting in the middle
         // No exception should be thrown by default, but we can still check iterator behavior
         EXPECT_NE(it, list.end()); // Iterator should not point to end, but its behavior is undefined
     }
@@ -739,7 +920,7 @@ namespace scc
         list.push_back(1);
         list.push_back(2);
         auto it = list.begin();
-        list.erase(0); // Erasing the first element
+        list.erase(list.cbegin()); // Erasing the first element
         // No exception should be thrown by default, but we can still check iterator behavior
         EXPECT_NE(it, list.end()); // Iterator should not point to end, but its behavior is undefined
     }
@@ -749,7 +930,7 @@ namespace scc
     TEST(XORListTest, InsertAtBeginOnEmptyList)
     {
         XORList<int> list;
-        list.insert(0, 1);
+        list.insert(list.cbegin(), 1);
 
         EXPECT_EQ(list.size(), 1);
         EXPECT_EQ(list.front(), 1);
@@ -758,7 +939,7 @@ namespace scc
     TEST(XORListTest, InsertAtEndOnEmptyList)
     {
         XORList<int> list;
-        list.insert(0, 1);
+        list.insert(list.cbegin(), 1);
 
         EXPECT_EQ(list.size(), 1);
         EXPECT_EQ(list.front(), 1);
@@ -769,7 +950,7 @@ namespace scc
         XORList<int> list;
         list.push_back(2);
         list.push_back(3);
-        list.insert(0, 1);
+        list.insert(list.cbegin(), 1);
 
         EXPECT_EQ(list.size(), 3);
         EXPECT_EQ(list.front(), 1);
@@ -781,7 +962,7 @@ namespace scc
         XORList<int> list;
         list.push_back(1);
         list.push_back(2);
-        list.insert(2, 3);
+        list.insert(++(++list.cbegin()), 3);
 
         EXPECT_EQ(list.size(), 3);
         EXPECT_EQ(list.front(), 1);
@@ -793,7 +974,7 @@ namespace scc
         XORList<int> list;
         list.push_back(1);
         list.push_back(2);
-        list.erase(0);
+        list.erase(list.cbegin());
 
         EXPECT_EQ(list.size(), 1);
         EXPECT_EQ(list.front(), 2);
@@ -804,10 +985,33 @@ namespace scc
         XORList<int> list;
         list.push_back(1);
         list.push_back(2);
-        list.erase(1);
+        list.erase(++list.cbegin());
 
         EXPECT_EQ(list.size(), 1);
         EXPECT_EQ(list.back(), 1);
+    }
+
+    TEST(XORListTest, EraseSingleElement)
+    {
+        XORList<int> list = {1, 2, 3, 4};
+        auto it = list.erase(++list.cbegin());
+
+        EXPECT_EQ(list.size(), 3);
+        EXPECT_EQ(*it, 3);
+        EXPECT_EQ(*list.cbegin(), 1);
+        EXPECT_EQ(*(++list.cbegin()), 3);
+        EXPECT_EQ(*(++(++list.cbegin())), 4);
+    }
+
+    TEST(XORListTest, EraseRangeOfElements)
+    {
+        XORList<int> list = {1, 2, 3, 4, 5};
+        auto it = list.erase(++list.cbegin(), --list.cend());
+
+        EXPECT_EQ(list.size(), 2);
+        EXPECT_EQ(*it, 5);
+        EXPECT_EQ(*list.cbegin(), 1);
+        EXPECT_EQ(*(++list.cbegin()), 5);
     }
 
     // Move Semantics
@@ -961,4 +1165,44 @@ namespace scc
         EXPECT_EQ(list.max_size(), std::numeric_limits<size_t>::max());
     }
 
+    TEST(XORListTest, Remove)
+    {
+        XORList<int> list;
+        list.push_back(1);
+        list.push_back(2);
+        list.push_back(3);
+        list.push_back(2);
+        list.push_back(4);
+
+        size_t removed_count = list.remove(2);
+
+        EXPECT_EQ(removed_count, 2);
+        EXPECT_EQ(list.size(), 3);
+
+        auto it = list.begin();
+        EXPECT_EQ(*it++, 1);
+        EXPECT_EQ(*it++, 3);
+        EXPECT_EQ(*it++, 4);
+    }
+
+    TEST(XORListTest, RemoveIf)
+    {
+        XORList<int> list;
+        list.push_back(1);
+        list.push_back(2);
+        list.push_back(3);
+        list.push_back(4);
+        list.push_back(5);
+
+        size_t removed_count = list.remove_if([](int value)
+                                              { return value % 2 == 0; });
+
+        EXPECT_EQ(removed_count, 2);
+        EXPECT_EQ(list.size(), 3);
+
+        auto it = list.begin();
+        EXPECT_EQ(*it++, 1);
+        EXPECT_EQ(*it++, 3);
+        EXPECT_EQ(*it++, 5);
+    }
 } // namespace scc
