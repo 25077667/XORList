@@ -1,15 +1,12 @@
-name: C/C++ patch CI
+name: C/C++ Major/Minor Release CI
 
 on:
   push:
-    branches: [ main ]
-    tags-ignore: 
-      - 'v*'  # Ignore all tag version pushes
-  pull_request:
-    branches: [ main ]
+    tags:
+      - 'v*.*.*'  # Trigger the workflow on version tags like v1.0.0
   release:
-    types: [ push ]
-    branches: [ main ]
+    types: [created]
+
 
 jobs:
   build:
@@ -54,25 +51,7 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-
-    - name: Get latest release
-      id: get_latest_release
-      run: |
-        latest_release=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r .tag_name)
-        echo "latest_release=${latest_release}" >> $GITHUB_ENV
-
-    - name: Determine next version
-      id: next_version
-      run: |
-        if [ "${{ env.latest_release }}" = "null" ]; then
-          echo "new_version=v0.1.0" >> $GITHUB_ENV
-        else
-          IFS='.' read -r major minor patch <<< "${{ env.latest_release }}"
-          patch=$((patch + 1))
-          new_version="$major.$minor.$patch"
-          echo "new_version=$new_version" >> $GITHUB_ENV
-        fi
-
+   
     - name: Create release directory
       run: |
         mkdir release
@@ -95,9 +74,9 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GH_PAT }}
       with:
-        tag_name: "${{ env.new_version }}"
-        name: "Release ${{ env.new_version }}"
-        body: "Release for commit number ${{ env.new_version }}"
+        tag_name: "${{ github.ref_name }}"
+        name: "Release ${{ github.ref_name }}"
+        body: "Release for commit number ${{ github.ref_name }}"
         files: |
           release.zip
           release.tar.gz
